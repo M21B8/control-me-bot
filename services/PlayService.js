@@ -1,5 +1,4 @@
 const {MessageEmbed} = require('discord.js');
-const {LinkService} = require('../services/LinkService.js');
 const {SpeedService} = require('../services/SpeedService.js');
 const {MessageService} = require('../services/MessageService.js');
 
