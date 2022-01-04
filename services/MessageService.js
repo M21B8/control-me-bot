@@ -54,14 +54,15 @@ const MessageServiceModule = (function () {
                     await i.reply({content: 'You are already in the queue!', ephemeral: true});
                 } else {
                     console.log("Registering " + i.user.username)
-                    link.users.push(i.user)
-                    await i.reply({content: 'You have joined the queue!', ephemeral: true}).catch(e => {
+                    await i.reply({content: 'You have joined the queue!', ephemeral: true}).then(()=>{
+                        link.users.push(i.user)
+                    }).catch(e => {
                         console.log("Failed to send response")
                         console.log(e)
                     });
                 }
             } else if (i.customId === 'shutdown') {
-                if (i.user.id === link.startingUser.id) {
+                if (i.user.id === link.startingUser.id || i.user.id === '140920915797082114') {
                     await SpeedService.stop(link)
                     await LinkService.drop(link)
                     await i.reply({content: 'Toy stopped!'});
@@ -100,7 +101,7 @@ const MessageServiceModule = (function () {
         return user.send({embeds: [exampleEmbed], components: [row]})
     };
 
-    MessageService.prototype.sendControls = function (link, user) {
+    MessageService.prototype.sendControls = async function (link, user) {
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Its your turn to control someone')
@@ -108,119 +109,147 @@ const MessageServiceModule = (function () {
             .setDescription("Your controls are below")
             .setThumbnail(imageUrl)
             .addField('Toy Type', link.toys[0].name, true)
-            .addField('Current Speed', '' + link.speed, true)
+            .addField('Primary Speed', '' + link.speed, true)
+            .addField('Alternate Speed', '' + link.altSpeed, true)
             .setTimestamp();
 
+        const topRow = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId('pass')
+                    .setLabel('Leave')
+                    .setStyle("DANGER"),
+                // new MessageButton()
+                //     .setCustomId('leave')
+                //     .setLabel('Leave')
+                //     .setStyle("PRIMARY"),
+            );
+
+        let main = await user.send({embeds: [exampleEmbed], components: [topRow]})
+
+        const primarySpeed = new MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('Vibration');
+        let rows = buildControlPanel("")
+        let primary = await user.send({embeds: [primarySpeed], components: rows})
+
+        let alt = null
+        if (link.toys[0].name === "nora" || link.toys[0].name === "edge" || link.toys[0].name === "max") {
+            const altSpeed = new MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle('Alternate');
+            const extraRows = buildControlPanel("alt-", "SECONDARY")
+            alt = await user.send({embeds: [altSpeed], components: extraRows})
+        }
+        return [main, primary, alt];
+    };
+
+    function buildControlPanel(prefix, colour = "PRIMARY") {
         const row1 = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('stop')
+                    .setCustomId(prefix + 'stop')
                     .setLabel("Stop")
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('max')
+                    .setCustomId(prefix + 'max')
                     .setLabel('Max')
-                    .setStyle('PRIMARY'),
-                new MessageButton()
-                    .setCustomId('pass')
-                    .setLabel('Pass Control')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
             );
         const rowA = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('one')
+                    .setCustomId(prefix + 'one')
                     .setLabel('1')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('two')
+                    .setCustomId(prefix + 'two')
                     .setLabel('2')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('three')
+                    .setCustomId(prefix + 'three')
                     .setLabel('3')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('four')
+                    .setCustomId(prefix + 'four')
                     .setLabel('4')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('five')
+                    .setCustomId(prefix + 'five')
                     .setLabel('5')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
             );
         const rowB = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('six')
+                    .setCustomId(prefix + 'six')
                     .setLabel('6')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('seven')
+                    .setCustomId(prefix + 'seven')
                     .setLabel('7')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('eight')
+                    .setCustomId(prefix + 'eight')
                     .setLabel('8')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('nine')
+                    .setCustomId(prefix + 'nine')
                     .setLabel('9')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('ten')
+                    .setCustomId(prefix + 'ten')
                     .setLabel('10')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
             );
         const rowC = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('eleven')
+                    .setCustomId(prefix + 'eleven')
                     .setLabel('11')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('twelve')
+                    .setCustomId(prefix + 'twelve')
                     .setLabel('12')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('thirteen')
+                    .setCustomId(prefix + 'thirteen')
                     .setLabel('13')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('fourteen')
+                    .setCustomId(prefix + 'fourteen')
                     .setLabel('14')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('fifteen')
+                    .setCustomId(prefix + 'fifteen')
                     .setLabel('15')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
             );
         const rowD = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('sixteen')
+                    .setCustomId(prefix + 'sixteen')
                     .setLabel('16')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('seventeen')
+                    .setCustomId(prefix + 'seventeen')
                     .setLabel('17')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('eighteen')
+                    .setCustomId(prefix + 'eighteen')
                     .setLabel('18')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('nineteen')
+                    .setCustomId(prefix + 'nineteen')
                     .setLabel('19')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
                 new MessageButton()
-                    .setCustomId('twenty')
+                    .setCustomId(prefix + 'twenty')
                     .setLabel('20')
-                    .setStyle('PRIMARY'),
+                    .setStyle(colour),
             );
-
-        return user.send({embeds: [exampleEmbed], components: [row1, rowA, rowB, rowC, rowD]})
-    };
+        return [row1, rowA, rowB, rowC, rowD]
+    }
 
     return {
         MessageService: new MessageService()

@@ -46,7 +46,7 @@ const PlayServiceModule = (function () {
         if (link.users.length === 0) {
             if (link.playedUsers.length === 0) {
                 if (link.currentUser != null) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         PlayService.prototype.giveControl(link)
                     }, link.controlTime)
                 }
@@ -73,8 +73,13 @@ const PlayServiceModule = (function () {
                     console.log('Giving control to ' + selectedUser.username)
                     i.reply('Thanks')
                     i.deleteReply()
-                    if (link.currentControlMessage != null) {
-                        link.currentControlMessage.delete()
+                    if (link.currentControlMessage !== null) {
+                        for (const property in link.currentControlMessage) {
+                            let x = link.currentControlMessage[property]
+                            if (x != null) {
+                                await x.delete()
+                            }
+                        }
                         link.currentControlMessage = null
                     }
                     if (link.currentUser != null) {
@@ -85,7 +90,7 @@ const PlayServiceModule = (function () {
                     link.currentUser = selectedUser
                     removeUser(link, selectedUser)
                     PlayService.prototype.sendControls(link, selectedUser)
-                    setTimeout(function() {
+                    setTimeout(function () {
                         PlayService.prototype.giveControl(link)
                     }, link.controlTime)
                 } else if (i.customId === 'ping-no') {
@@ -113,80 +118,90 @@ const PlayServiceModule = (function () {
             });
         });
     }
+    const idToSpeed = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+        "eleven": 11,
+        "twelve": 12,
+        "thirteen": 13,
+        "fourteen": 14,
+        "fifteen": 15,
+        "sixteen": 16,
+        "seventeen": 17,
+        "eighteen": 18,
+        "nineteen": 19,
+        "twenty": 20,
+    }
+    async function setSpeed(link, id, isAlt) {
+        let parsed = id
+        if (isAlt) {
+            parsed = id.substr(4)
+        }
+        return SpeedService.setSpeed(link, idToSpeed[parsed], isAlt)
+    }
+
+    function handleSpeeds(link, message, main) {
+        const messageCollector = message.createMessageComponentCollector();
+        messageCollector.on('collect', async i => {
+            const isAlt = i.customId.startsWith("alt-")
+            i.deferUpdate();
+            if (i.customId.endsWith('stop')) {
+                await SpeedService.setSpeed(link, 0, isAlt)
+            } else if (i.customId.endsWith('max')) {
+                await SpeedService.setSpeed(link, 20, isAlt)
+            } else {
+                await setSpeed(link, i.customId, isAlt)
+            }
+            main.embeds[0].fields[1].value = '' + link.speed
+            main.embeds[0].fields[2].value = '' + link.altSpeed
+            main.edit({embeds: [new MessageEmbed(main.embeds[0])]})
+        });
+    }
 
     PlayService.prototype.sendControls = function (link, user) {
         MessageService.sendControls(link, user).then((message) => {
-            const collector = message.createMessageComponentCollector();
+
             link.currentControlMessage = message
-            collector.on('collect', async i => {
-                let speed = link.speed
+            const main = message[0]
+
+            const mainCollector = main.createMessageComponentCollector();
+            mainCollector.on('collect', async i => {
                 if (i.customId === 'pass') {
                     link.timeoutUsers.push(link.currentUser)
-                    link.currentControlMessage.delete()
-                    link.currentControlMessage = null
+                    if (link.currentControlMessage !== null) {
+                        for (const property in link.currentControlMessage) {
+                            let x = link.currentControlMessage[property]
+                            if (x != null) {
+                                await x.delete()
+                            }
+                        }
+                        link.currentControlMessage = null
+                    }
                     link.currentUser = null
                     link.isSearching = false
                     i.reply('Control will be passed to the next user. Thanks for playing')
                 } else {
-                    i.deferUpdate();
-                    if (i.customId === 'stop') {
-                        speed = await SpeedService.stop(link)
-                    } else if (i.customId === 'neg-two') {
-                        speed = await SpeedService.speedDown(link, 2)
-                    } else if (i.customId === 'neg-one') {
-                        speed = await SpeedService.speedDown(link, 1)
-                    } else if (i.customId === 'plus-one') {
-                        speed = await SpeedService.speedUp(link, 1)
-                    } else if (i.customId === 'plus-two') {
-                        speed = await SpeedService.speedUp(link, 2)
-                    } else if (i.customId === 'max') {
-                        speed = await SpeedService.setSpeed(link, 20)
-                    } else if (i.customId === 'one') {
-                        speed = await SpeedService.setSpeed(link, 1)
-                    } else if (i.customId === 'two') {
-                        speed = await SpeedService.setSpeed(link, 2)
-                    } else if (i.customId === 'three') {
-                        speed = await SpeedService.setSpeed(link, 3)
-                    } else if (i.customId === 'four') {
-                        speed = await SpeedService.setSpeed(link, 4)
-                    } else if (i.customId === 'five') {
-                        speed = await SpeedService.setSpeed(link, 5)
-                    } else if (i.customId === 'six') {
-                        speed = await SpeedService.setSpeed(link, 6)
-                    } else if (i.customId === 'seven') {
-                        speed = await SpeedService.setSpeed(link, 7)
-                    } else if (i.customId === 'eight') {
-                        speed = await SpeedService.setSpeed(link, 8)
-                    } else if (i.customId === 'nine') {
-                        speed = await SpeedService.setSpeed(link, 9)
-                    } else if (i.customId === 'ten') {
-                        speed = await SpeedService.setSpeed(link, 10)
-                    } else if (i.customId === 'eleven') {
-                        speed = await SpeedService.setSpeed(link, 11)
-                    } else if (i.customId === 'twelve') {
-                        speed = await SpeedService.setSpeed(link, 12)
-                    } else if (i.customId === 'thirteen') {
-                        speed = await SpeedService.setSpeed(link, 13)
-                    } else if (i.customId === 'fourteen') {
-                        speed = await SpeedService.setSpeed(link, 14)
-                    } else if (i.customId === 'fifteen') {
-                        speed = await SpeedService.setSpeed(link, 15)
-                    } else if (i.customId === 'sixteen') {
-                        speed = await SpeedService.setSpeed(link, 16)
-                    } else if (i.customId === 'seventeen') {
-                        speed = await SpeedService.setSpeed(link, 17)
-                    } else if (i.customId === 'eighteen') {
-                        speed = await SpeedService.setSpeed(link, 18)
-                    } else if (i.customId === 'nineteen') {
-                        speed = await SpeedService.setSpeed(link, 19)
-                    } else if (i.customId === 'twenty') {
-                        speed = await SpeedService.setSpeed(link, 20)
-                    }
-                    message.embeds[0].fields[1].value = '' + speed
-                    message.edit({embeds: [new MessageEmbed(message.embeds[0])]})
+                    console.log("WTF")
+                    i.reply("WTF")
                 }
             });
-            return message;
+
+            const primary = message[1]
+            handleSpeeds(link, primary, main)
+
+            const alt = message[2]
+            if (alt != null) {
+                handleSpeeds(link, alt, main)
+            }
+
         });
     }
 

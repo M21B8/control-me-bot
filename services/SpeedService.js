@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const FormData = require('form-data')
-const {LinkService}  = require('../services/LinkService.js')
+const {LinkService} = require('../services/LinkService.js')
 
 const SpeedServiceModule = (function () {
     /**
@@ -11,23 +11,47 @@ const SpeedServiceModule = (function () {
         this.links = [];
     };
 
+    const toyControl = {
+        "nora": {p: "v", a: "r"},
+        "edge": {p: "v1", a: "v2"},
+        "max": {p: "v", a: "p"}
+    }
 
-    SpeedService.prototype.setSpeed = async function (link, speed) {
+    SpeedService.prototype.setSpeed = async function (link, speed, isAlt = false) {
 
         let command = {
             cate: "id",
             id: {}
         }
 
-        let toys = link.toys
+        let toy = link.toys[0]
 
-        command.id[toys[0].id] = {
-            v: speed,
+        let primarySpeed = link.speed
+        let altSpeed = link.altSpeed
+
+        if (isAlt) {
+            altSpeed = speed
+        } else {
+            primarySpeed = speed
+        }
+
+        command.id[toy.id] = {
+            v: -1,
             v1: -1,
             v2: -1,
             p: -1,
             r: -1,
         }
+
+        const overrides = toyControl[toy.name]
+        let primary = "v"
+        let alt = "r"
+        if (overrides != null) {
+            primary = overrides.p
+            alt = overrides.a
+        }
+        command.id[toy.id][primary] = primarySpeed
+        command.id[toy.id][alt] = altSpeed
 
         let formData = new FormData();
         formData.append('order', JSON.stringify(command));
@@ -36,25 +60,17 @@ const SpeedServiceModule = (function () {
             return response;
         });
 
-        link.speed = speed
+        link.speed = primarySpeed
+        link.altSpeed = altSpeed
 
         console.log("speed set to: " + speed)
         return speed
     }
 
-    SpeedService.prototype.speedUp = async function (link, amount = 1) {
-        return this.setSpeed(link, link.speed + amount)
-    }
-
-    SpeedService.prototype.speedDown = async function (link, amount = 1) {
-        return this.setSpeed(link, link.speed - amount)
-    }
-
     SpeedService.prototype.stop = async function (link) {
-        return this.setSpeed(link, 0)
-    }
-    SpeedService.prototype.max = async function (link) {
-        return this.setSpeed(link, 20)
+        await this.setSpeed(link, 0)
+        await this.setSpeed(link, 0, true)
+        return
     }
 
     return {

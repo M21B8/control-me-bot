@@ -40,6 +40,7 @@ const LinkServiceModule = (function () {
                 connectCode: connectCode,
                 id: id,
                 speed: -1,
+                altSpeed: -1,
                 users: [],
                 playedUsers: [],
                 timeoutUsers: [],
@@ -99,8 +100,14 @@ const LinkServiceModule = (function () {
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
-        if (link.currentControlMessage != null) {
-            link.currentControlMessage.delete();
+        if (link.currentControlMessage !== null) {
+            for (const property in link.currentControlMessage) {
+                let x = link.currentControlMessage[property]
+                if (x != null) {
+                    await x.delete()
+                }
+            }
+            link.currentControlMessage = null
         }
 
         if (link.registrationMessage != null) {
