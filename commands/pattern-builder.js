@@ -13,14 +13,16 @@ module.exports = {
 
 function patternCompilation(interaction) {
 
+    // Initial defaults
     let pattern = []
     pattern.steps = 0
     pattern.lastStep = 'N/A'
 
+    // Fetch the message data from the Pattern Message Service and use it to DM the user
     let messageData = getPatternBuilderUI(interaction, pattern)
-
     interaction.user.send({embeds: messageData.embeds, components: messageData.components}).then((message) => {
 
+        // Start the message and point the user to their DMs
         const messageCollector = message.createMessageComponentCollector()
         interaction.reply({ content: 'Check your DMs to build a pattern!', ephemeral: true })
 

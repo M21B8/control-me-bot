@@ -11,6 +11,7 @@ const PatternMessageServiceModule = (function () {
     };
 
     PatternMessageService.prototype.setPatternStep = function (user, pattern) {
+        // Create the message embed
         const patternSpeedEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Create a Lovense pattern string')
@@ -21,8 +22,10 @@ const PatternMessageServiceModule = (function () {
             .setThumbnail(imageUrl)
             .setTimestamp();
 
+        // Only allow the buttons to be enabled when the correct data is present
         let buttonsDisabled = (pattern.selectedLevel && pattern.selectedDuration) ? false : true
 
+        // Construct the speed options, preserving defaults when the message is reloaded
         const row1 = new MessageActionRow()
             .addComponents(
                 new MessageSelectMenu()
@@ -131,6 +134,8 @@ const PatternMessageServiceModule = (function () {
                         },
 					]),
             );
+
+        // Construct duration options, using millisecond values but human readable labels, and preserving defaults when the message is reloaded
         const row2 = new MessageActionRow()
             .addComponents(
                 new MessageSelectMenu()
@@ -194,6 +199,8 @@ const PatternMessageServiceModule = (function () {
                         },
                     ]),
             );
+
+        // Construct submission buttons that are disabled until the necessary step data exists
         const row3 = new MessageActionRow()
             .addComponents(
                 new MessageButton()
@@ -208,6 +215,7 @@ const PatternMessageServiceModule = (function () {
                     .setDisabled(buttonsDisabled),
             );
 
+        // Return data objects without actually sending a message, so the data can be used in isolation
         return {embeds: [patternSpeedEmbed], components: [row1, row2, row3]}
     };
 
