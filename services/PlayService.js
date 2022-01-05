@@ -71,19 +71,27 @@ const PlayServiceModule = (function () {
             collector.on('collect', async i => {
                 if (i.customId === 'ping-yes') {
                     console.log('Giving control to ' + selectedUser.username)
-                    i.reply('Thanks')
-                    i.deleteReply()
+                    i.deferUpdate().catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                     if (link.currentControlMessage !== null) {
                         for (const property in link.currentControlMessage) {
                             let x = link.currentControlMessage[property]
                             if (x != null) {
-                                await x.delete()
+                                await x.delete().catch(e => {
+                                    console.log("Failed to send response")
+                                    console.log(e)
+                                });
                             }
                         }
                         link.currentControlMessage = null
                     }
                     if (link.currentUser != null) {
-                        link.currentUser.send("Your time is up! Thanks for Playing!")
+                        link.currentUser.send("Your time is up! Thanks for Playing!").catch(e => {
+                            console.log("Failed to send response")
+                            console.log(e)
+                        });
                         link.playedUsers.push(link.currentUser)
                     }
                     selectedUser.timeouts = 0
@@ -94,7 +102,10 @@ const PlayServiceModule = (function () {
                         PlayService.prototype.giveControl(link)
                     }, link.controlTime)
                 } else if (i.customId === 'ping-no') {
-                    i.reply('You will be removed from the play queue')
+                    i.reply('You will be removed from the play queue').catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                     removeUser(link, selectedUser)
                     PlayService.prototype.giveControl(link)
                 }
@@ -104,17 +115,26 @@ const PlayServiceModule = (function () {
                     if (selectedUser.timeouts == null) {
                         selectedUser.timeouts = 0
                     }
-                    selectedUser.send("You missed your chance! Pay Attention!")
+                    selectedUser.send("You missed your chance! Pay Attention!").catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                     selectedUser.timeouts = selectedUser.timeouts + 1
                     if (selectedUser.timeouts >= 3) {
-                        selectedUser.send("You walked away from this? To the Naughty List!")
+                        selectedUser.send("You walked away from this? To the Naughty List!").catch(e => {
+                            console.log("Failed to send response")
+                            console.log(e)
+                        });
                         console.log('Timing out ' + selectedUser.username + ' after 3 fails')
                         link.timeoutUsers.push(selectedUser)
                         removeUser(link, selectedUser)
                     }
                     PlayService.prototype.giveControl(link)
                 }
-                message.delete()
+                message.delete().catch(e => {
+                    console.log("Failed to send response")
+                    console.log(e)
+                });
             });
         });
     }
@@ -152,7 +172,10 @@ const PlayServiceModule = (function () {
         const messageCollector = message.createMessageComponentCollector();
         messageCollector.on('collect', async i => {
             const isAlt = i.customId.startsWith("alt-")
-            i.deferUpdate();
+            i.deferUpdate().catch(e => {
+                console.log("Failed to send response")
+                console.log(e)
+            });
             if (i.customId.endsWith('stop')) {
                 await SpeedService.setSpeed(link, 0, isAlt)
             } else if (i.customId.endsWith('max')) {
@@ -166,6 +189,24 @@ const PlayServiceModule = (function () {
         });
     }
 
+    async function endEarly(link, targetList) {
+        targetList.push(link.currentUser)
+        if (link.currentControlMessage !== null) {
+            for (const property in link.currentControlMessage) {
+                let x = link.currentControlMessage[property]
+                if (x != null) {
+                    await x.delete().catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
+                }
+            }
+            link.currentControlMessage = null
+        }
+        link.currentUser = null
+        link.isSearching = false
+    }
+
     PlayService.prototype.sendControls = function (link, user) {
         MessageService.sendControls(link, user).then((message) => {
 
@@ -174,23 +215,26 @@ const PlayServiceModule = (function () {
 
             const mainCollector = main.createMessageComponentCollector();
             mainCollector.on('collect', async i => {
-                if (i.customId === 'pass') {
-                    link.timeoutUsers.push(link.currentUser)
-                    if (link.currentControlMessage !== null) {
-                        for (const property in link.currentControlMessage) {
-                            let x = link.currentControlMessage[property]
-                            if (x != null) {
-                                await x.delete()
-                            }
-                        }
-                        link.currentControlMessage = null
-                    }
-                    link.currentUser = null
-                    link.isSearching = false
-                    i.reply('Control will be passed to the next user. Thanks for playing')
+                if (i.customId === 'leave') {
+                    console.log(link.currentUser.username + ' has left')
+                    await endEarly(link, link.timeoutUsers)
+                    i.reply('Control will be passed to the next user. You have been removed from the list of players. Thanks for playing.').catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
+                } else if (i.customId === 'pass') {
+                    console.log(link.currentUser.username + ' has passed control')
+                    await endEarly(link, link.playedUsers)
+                    i.reply('Control will be passed to the next user. Thanks for playing.').catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                 } else {
                     console.log("WTF")
-                    i.reply("WTF")
+                    i.reply("WTF").catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                 }
             });
 

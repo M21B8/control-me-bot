@@ -40,8 +40,14 @@ const MessageServiceModule = (function () {
             )
         ;
 
-        await interaction.reply({content: 'Connected! You should have received a short pulse.', ephemeral: true});
-        const m = await interaction.followUp({embeds: [exampleEmbed], components: [row]});
+        await interaction.reply({content: 'Connected! You should have received a short pulse.', ephemeral: true}).catch(e => {
+            console.log("Failed to send response")
+            console.log(e)
+        });
+        const m = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(e => {
+            console.log("Failed to send response")
+            console.log(e)
+        });
 
         const collector = interaction.channel.createMessageComponentCollector();
 
@@ -51,10 +57,13 @@ const MessageServiceModule = (function () {
                     return u.username === i.user.username
                 }).length > 0) {
                     console.log(i.user.username + " is already registered")
-                    await i.reply({content: 'You are already in the queue!', ephemeral: true});
+                    await i.reply({content: 'You are already in the queue!', ephemeral: true}).catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                 } else {
-                    console.log("Registering " + i.user.username)
-                    await i.reply({content: 'You have joined the queue!', ephemeral: true}).then(()=>{
+                    await i.reply({content: 'You have joined the queue!', ephemeral: true}).then(() => {
+                        console.log("Registering " + i.user.username)
                         link.users.push(i.user)
                     }).catch(e => {
                         console.log("Failed to send response")
@@ -65,9 +74,15 @@ const MessageServiceModule = (function () {
                 if (i.user.id === link.startingUser.id || i.user.id === '140920915797082114') {
                     await SpeedService.stop(link)
                     await LinkService.drop(link)
-                    await i.reply({content: 'Toy stopped!'});
+                    await i.reply({content: 'Toy stopped!'}).catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                 } else {
-                    i.reply(i.user.username + " - Please don't try to stop someone else's toy.")
+                    i.reply(i.user.username + " - Please don't try to stop someone else's toy.").catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                 }
             }
         });
@@ -97,7 +112,7 @@ const MessageServiceModule = (function () {
                     .setStyle('PRIMARY'),
             );
 
-
+        console.log('Pinging user: ' + user.username)
         return user.send({embeds: [exampleEmbed], components: [row]})
     };
 
@@ -117,12 +132,13 @@ const MessageServiceModule = (function () {
             .addComponents(
                 new MessageButton()
                     .setCustomId('pass')
+                    .setLabel('Pass Control')
+                    .setStyle("PRIMARY"),
+                new MessageButton()
+                    .setCustomId('leave')
                     .setLabel('Leave')
                     .setStyle("DANGER"),
-                // new MessageButton()
-                //     .setCustomId('leave')
-                //     .setLabel('Leave')
-                //     .setStyle("PRIMARY"),
+
             );
 
         let main = await user.send({embeds: [exampleEmbed], components: [topRow]})
@@ -131,7 +147,10 @@ const MessageServiceModule = (function () {
             .setColor('#0099ff')
             .setTitle('Vibration');
         let rows = buildControlPanel("")
-        let primary = await user.send({embeds: [primarySpeed], components: rows})
+        let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(e => {
+            console.log("Failed to send response")
+            console.log(e)
+        });
 
         let alt = null
         if (link.toys[0].name === "nora" || link.toys[0].name === "edge" || link.toys[0].name === "max") {
@@ -139,12 +158,15 @@ const MessageServiceModule = (function () {
                 .setColor('#0099ff')
                 .setTitle('Alternate');
             const extraRows = buildControlPanel("alt-", "SECONDARY")
-            alt = await user.send({embeds: [altSpeed], components: extraRows})
+            alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(e => {
+                console.log("Failed to send response")
+                console.log(e)
+            });
         }
         return [main, primary, alt];
     };
 
-    function buildControlPanel(prefix, colour = "PRIMARY") {
+    function buildControlPanel(prefix, colour = "SUCCESS") {
         const row1 = new MessageActionRow()
             .addComponents(
                 new MessageButton()

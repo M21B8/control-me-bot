@@ -39,8 +39,8 @@ const LinkServiceModule = (function () {
                 startingUser: interaction.user,
                 connectCode: connectCode,
                 id: id,
-                speed: -1,
-                altSpeed: -1,
+                speed: 0,
+                altSpeed: 0,
                 users: [],
                 playedUsers: [],
                 timeoutUsers: [],
@@ -104,14 +104,20 @@ const LinkServiceModule = (function () {
             for (const property in link.currentControlMessage) {
                 let x = link.currentControlMessage[property]
                 if (x != null) {
-                    await x.delete()
+                    await x.delete().catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
                 }
             }
             link.currentControlMessage = null
         }
 
         if (link.registrationMessage != null) {
-            link.registrationMessage.delete();
+            link.registrationMessage.delete().catch(e => {
+                console.log("Failed to send response")
+                console.log(e)
+            });
         }
         delete this.links[link.id]
     }
