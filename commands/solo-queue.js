@@ -5,7 +5,7 @@ const {PlayService} = require('../services/PlayService.js')
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('connect')
+        .setName('solo-queue')
         .setDescription('Connects to a Lovense Link!')
         .addStringOption(option =>
             option.setName('link')
