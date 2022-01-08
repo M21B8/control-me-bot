@@ -6,10 +6,9 @@ const LinkServiceModule = (function () {
      * @constructor
      */
     const LinkService = function () {
-        this.links = {};
     };
 
-    LinkService.prototype.connect = async function (interaction) {
+    LinkService.prototype.connect = async function (interaction, session) {
         let params = interaction.options.get('link').value
         const match = params.match(new RegExp('https://c.lovense.com/v2/(.*)$'))
 
@@ -17,7 +16,7 @@ const LinkServiceModule = (function () {
         if (match != null) {
             connectCode = match[1]
         }
-        if (this.links[connectCode] != null) {
+        if (session.links[connectCode] != null) {
             console.log('already active link. weird huh?')
             return null
         }
@@ -36,20 +35,23 @@ const LinkServiceModule = (function () {
             let id = response3.url.match(new RegExp('.*play\/(.*)\\?email.*$'))[1];
 
             const link = {
+                url: 'https://c.lovense.com/v2/' + connectCode,
                 startingUser: interaction.user,
                 connectCode: connectCode,
                 id: id,
                 speed: 0,
                 altSpeed: 0,
-                users: [],
-                playedUsers: [],
-                timeoutUsers: [],
                 toys: [],
-                controlTime: 60_000
+                controlTime: 60_000,
+                maxSpeed: 100,
+                maxAlt: 100
             }
             const playParams = interaction.options.get('playtime')
             if (playParams != null) {
                 link.controlTime = playParams.value * 60_000
+            }
+            if (session.sessionPlaytime != null) {
+                link.controlTime = -1
             }
             const anon = interaction.options.get('anonymous')
             if (anon != null) {
@@ -58,24 +60,28 @@ const LinkServiceModule = (function () {
 
             const response4 = await LinkService.prototype.ping(id)
 
-            const data = await response4.json()
-            if (data.status === 429) {
+            const json = await response4.json()
+            if (json.status === 429) {
                 console.log('Too many requests. FUCK!')
                 return null
             }
 
-            if (data.code === 400) {
+            if (json.code === 400) {
                 console.log("Link is invalid")
                 return null
             }
-
-            let toys = data.data.toyData
-            for (var t in toys) {
-                link.toys.push({id: t, name: toys[t].name})
-            }
-            this.links[id] = link
+            console.log(json.data.leftTime)
+            console.log(json.data.leftTime / 60)
+            console.log(Math.round(json.data.leftTime / 60))
+            link.totalTime = Math.round(json.data.leftTime / 60)
+            console.log(link.totalTime)
+            let toys = json.data.toyData
+            Object.values(toys).forEach((v) => {
+                link.toys.push({id: v.id, name: v.name})
+            })
 
             console.log('Connected to: ' + connectCode);
+            session.links[id] = link
             return link
 
         } else {
@@ -96,7 +102,7 @@ const LinkServiceModule = (function () {
     LinkService.prototype.getLink = async function (linkId) {
         delete this.links[linkId]
     }
-    LinkService.prototype.drop = async function (link) {
+    LinkService.prototype.drop = async function (session, link) {
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
@@ -119,7 +125,7 @@ const LinkServiceModule = (function () {
                 console.log(e)
             });
         }
-        delete this.links[link.id]
+        delete session.links[link.id]
     }
 
     return {

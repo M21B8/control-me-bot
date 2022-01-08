@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const FormData = require('form-data')
-const {LinkService} = require('../services/LinkService.js')
+const Toys = require('../constants/Toys.js')
 
 const SpeedServiceModule = (function () {
     /**
@@ -11,11 +11,7 @@ const SpeedServiceModule = (function () {
         this.links = [];
     };
 
-    const toyControl = {
-        "nora": {p: "v", a: "r"},
-        "edge": {p: "v1", a: "v2"},
-        "max": {p: "v", a: "p"}
-    }
+
 
     SpeedService.prototype.setSpeed = async function (link, speed, isAlt = false) {
 
@@ -43,15 +39,14 @@ const SpeedServiceModule = (function () {
             r: -1,
         }
 
-        const overrides = toyControl[toy.name]
-        let primary = "v"
-        let alt = "r"
-        if (overrides != null) {
-            primary = overrides.p
-            alt = overrides.a
-        }
+        const toyInfo = Toys[toy.name]
+        let primary = toyInfo.primary
         command.id[toy.id][primary] = primarySpeed
-        command.id[toy.id][alt] = altSpeed
+
+        if (toyInfo.hasAlternate) {
+            let alt = toyInfo.alternate
+            command.id[toy.id][alt] = altSpeed
+        }
 
         let formData = new FormData();
         formData.append('order', JSON.stringify(command));
