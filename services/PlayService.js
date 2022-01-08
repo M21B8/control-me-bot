@@ -1,6 +1,8 @@
 const {MessageEmbed} = require('discord.js');
 const {SpeedService} = require('../services/SpeedService.js');
+const {SoloMessageService} = require('../services/SoloMessageService.js');
 const {MessageService} = require('../services/MessageService.js');
+const Toys = require('../constants/Toys.js');
 
 const PlayServiceModule = (function () {
     /**
@@ -10,104 +12,115 @@ const PlayServiceModule = (function () {
     const PlayService = function () {
     };
 
-    function selectNewUser(link) {
-        let userIndex = Math.floor((Math.random() * link.users.length) + 1) - 1;
-        return link.users[userIndex]
+    function selectNewUser(session) {
+        let userIndex = Math.floor((Math.random() * session.users.length) + 1) - 1;
+        return session.users[userIndex]
     }
 
-    function removeUser(link, user) {
-        link.users = link.users.filter((item) => {
+    function removeUser(session, user) {
+        session.users = session.users.filter((item) => {
             return item !== user
         })
     }
 
-    function pollForUser(link) {
+    function pollForUser(session, link) {
         setInterval(function () {
             if (link.currentUser != null || link.isSearching) {
                 return
             }
-            if (link.users.length === 0) {
-                if (link.playedUsers.length !== 0) {
+            if (session.users.length === 0) {
+                if (session.playedUsers.length !== 0) {
                     console.log("recycling played users")
-                    link.users = link.playedUsers
-                    link.playedUsers = []
+                    session.users = session.playedUsers
+                    session.playedUsers = []
                 }
             }
-            return PlayService.prototype.giveControl(link)
+            return PlayService.prototype.giveControl(session, link)
         }, 5000)
     }
 
-    PlayService.prototype.begin = async function (interaction, link) {
-        await MessageService.sendRegistration(interaction, link)
-        pollForUser(link)
+    PlayService.prototype.begin = async function (interaction, session, link) {
+        await SoloMessageService.sendRegistration(interaction, session, link)
+        pollForUser(session, link)
     };
-
-    PlayService.prototype.giveControl = function (link) {
-        if (link.users.length === 0) {
-            if (link.playedUsers.length === 0) {
+    PlayService.prototype.stopControl = async function (session, link) {
+        if (link.countdown != null) {
+            clearTimeout(link.countdown)
+        }
+        if (link.currentControlMessage != null) {
+            for (const property in link.currentControlMessage) {
+                let x = link.currentControlMessage[property]
+                if (x != null) {
+                    await x.delete().catch(e => {
+                        console.log("Failed to send response")
+                        console.log(e)
+                    });
+                }
+            }
+            link.currentControlMessage = null
+        }
+        if (link.currentUser != null) {
+            link.currentUser.send("Your time is up! Thanks for Playing!").catch(e => {
+                console.log("Failed to send response")
+                console.log(e)
+            });
+            session.playedUsers.push(link.currentUser)
+            link.currentUser = null
+        }
+    }
+    PlayService.prototype.giveControl = function (session, link) {
+        if (session.users.length === 0) {
+            if (session.playedUsers.length === 0) {
                 if (link.currentUser != null) {
-                    setTimeout(function () {
-                        PlayService.prototype.giveControl(link)
-                    }, link.controlTime)
+                    if (link.controlTime > 0) {
+                        link.countdown = setTimeout(function () {
+                            PlayService.prototype.giveControl(session, link)
+                        }, link.controlTime)
+                    }
                 }
                 link.isSearching = false
                 return;
             } else {
-                link.users = link.playedUsers
-                link.playedUsers = []
-                return PlayService.prototype.giveControl(link)
+                session.users = session.playedUsers
+                session.playedUsers = []
+                return PlayService.prototype.giveControl(session, link)
             }
         }
         link.isSearching = true
         // we have users
-        const selectedUser = selectNewUser(link)
-        pingUser(link, selectedUser)
+        const selectedUser = selectNewUser(session)
+        pingUser(session, link, selectedUser)
     }
 
-    function pingUser(link, selectedUser) {
+    function pingUser(session, link, selectedUser) {
         MessageService.pingUser(link, selectedUser).then((message) => {
             const collector = message.createMessageComponentCollector({max: 1, time: 10_000});
 
             collector.on('collect', async i => {
                 if (i.customId === 'ping-yes') {
-                    console.log('Giving control to ' + selectedUser.username)
+                    link.isSearching = false
+                    console.log(selectedUser.username + " took control of " + link.startingUser.username)
                     i.deferUpdate().catch(e => {
                         console.log("Failed to send response")
                         console.log(e)
                     });
-                    if (link.currentControlMessage !== null) {
-                        for (const property in link.currentControlMessage) {
-                            let x = link.currentControlMessage[property]
-                            if (x != null) {
-                                await x.delete().catch(e => {
-                                    console.log("Failed to send response")
-                                    console.log(e)
-                                });
-                            }
-                        }
-                        link.currentControlMessage = null
-                    }
-                    if (link.currentUser != null) {
-                        link.currentUser.send("Your time is up! Thanks for Playing!").catch(e => {
-                            console.log("Failed to send response")
-                            console.log(e)
-                        });
-                        link.playedUsers.push(link.currentUser)
-                    }
+                    await PlayService.prototype.stopControl(session, link)
                     selectedUser.timeouts = 0
                     link.currentUser = selectedUser
-                    removeUser(link, selectedUser)
-                    PlayService.prototype.sendControls(link, selectedUser)
-                    setTimeout(function () {
-                        PlayService.prototype.giveControl(link)
-                    }, link.controlTime)
+                    removeUser(session, selectedUser)
+                    PlayService.prototype.sendControls(session, link, selectedUser)
+                    if (link.controlTime > 0) {
+                        link.countdown = setTimeout(function () {
+                            PlayService.prototype.giveControl(session, link)
+                        }, link.controlTime)
+                    }
                 } else if (i.customId === 'ping-no') {
                     i.reply('You will be removed from the play queue').catch(e => {
                         console.log("Failed to send response")
                         console.log(e)
                     });
-                    removeUser(link, selectedUser)
-                    PlayService.prototype.giveControl(link)
+                    removeUser(session, selectedUser)
+                    PlayService.prototype.giveControl(session, link)
                 }
             });
             collector.on('end', (collected) => {
@@ -126,10 +139,10 @@ const PlayServiceModule = (function () {
                             console.log(e)
                         });
                         console.log('Timing out ' + selectedUser.username + ' after 3 fails')
-                        link.timeoutUsers.push(selectedUser)
-                        removeUser(link, selectedUser)
+                        session.timeoutUsers.push(selectedUser)
+                        removeUser(session, selectedUser)
                     }
-                    PlayService.prototype.giveControl(link)
+                    PlayService.prototype.giveControl(session, link)
                 }
                 message.delete().catch(e => {
                     console.log("Failed to send response")
@@ -138,6 +151,7 @@ const PlayServiceModule = (function () {
             });
         });
     }
+
     const idToSpeed = {
         "one": 1,
         "two": 2,
@@ -160,6 +174,7 @@ const PlayServiceModule = (function () {
         "nineteen": 19,
         "twenty": 20,
     }
+
     async function setSpeed(link, id, isAlt) {
         let parsed = id
         if (isAlt) {
@@ -183,8 +198,14 @@ const PlayServiceModule = (function () {
             } else {
                 await setSpeed(link, i.customId, isAlt)
             }
+            console.log(main.embeds[0].fields)
             main.embeds[0].fields[1].value = '' + link.speed
-            main.embeds[0].fields[2].value = '' + link.altSpeed
+            if (Toys[link.toys[0].name].hasAlternate) {
+                main.embeds[0].fields[2].value = '' + link.altSpeed
+                main.embeds[0].fields[3].value = '' + link.timeLeft
+            } else {
+                main.embeds[0].fields[2].value = '' + link.timeLeft
+            }
             main.edit({embeds: [new MessageEmbed(main.embeds[0])]})
         });
     }
@@ -207,7 +228,7 @@ const PlayServiceModule = (function () {
         link.isSearching = false
     }
 
-    PlayService.prototype.sendControls = function (link, user) {
+    PlayService.prototype.sendControls = function (session, link, user) {
         MessageService.sendControls(link, user).then((message) => {
 
             link.currentControlMessage = message
@@ -217,14 +238,14 @@ const PlayServiceModule = (function () {
             mainCollector.on('collect', async i => {
                 if (i.customId === 'leave') {
                     console.log(link.currentUser.username + ' has left')
-                    await endEarly(link, link.timeoutUsers)
+                    await endEarly(link, session.timeoutUsers)
                     i.reply('Control will be passed to the next user. You have been removed from the list of players. Thanks for playing.').catch(e => {
                         console.log("Failed to send response")
                         console.log(e)
                     });
                 } else if (i.customId === 'pass') {
                     console.log(link.currentUser.username + ' has passed control')
-                    await endEarly(link, link.playedUsers)
+                    await endEarly(link, session.playedUsers)
                     i.reply('Control will be passed to the next user. Thanks for playing.').catch(e => {
                         console.log("Failed to send response")
                         console.log(e)

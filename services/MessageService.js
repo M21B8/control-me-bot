@@ -1,6 +1,5 @@
 const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
-const {LinkService} = require('../services/LinkService')
-const {SpeedService} = require('../services/SpeedService')
+const Toys = require('../constants/Toys.js')
 
 const imageUrl = "https://i.imgur.com/46AQjlT.png"
 
@@ -12,92 +11,15 @@ const MessageServiceModule = (function () {
     const MessageService = function () {
     };
 
-    MessageService.prototype.sendRegistration = async function (interaction, link) {
-
-        const exampleEmbed = new MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle('A Lovense is available for control')
-            .setAuthor('Lovense Bot')
-            .setDescription('Someone on this server has enabled their toy for remote control.')
-            .setThumbnail(imageUrl)
-            .addField('Toy Type', link.toys[0].name, true)
-            .setTimestamp();
-
-        if (!link.anonymous) {
-            exampleEmbed.addField('Toy Owner', link.startingUser.username)
-        }
-
-        const row = new MessageActionRow()
-            .addComponents(
-                new MessageButton()
-                    .setCustomId('signup')
-                    .setLabel('Sign Up')
-                    .setStyle('PRIMARY'),
-                new MessageButton()
-                    .setCustomId('shutdown')
-                    .setLabel('Shutdown')
-                    .setStyle('DANGER'),
-            )
-        ;
-
-        await interaction.reply({content: 'Connected! You should have received a short pulse.', ephemeral: true}).catch(e => {
-            console.log("Failed to send response")
-            console.log(e)
-        });
-        const m = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(e => {
-            console.log("Failed to send response")
-            console.log(e)
-        });
-
-        const collector = interaction.channel.createMessageComponentCollector();
-
-        collector.on('collect', async i => {
-            if (i.customId === 'signup') {
-                if (link.users.filter(u => {
-                    return u.username === i.user.username
-                }).length > 0) {
-                    console.log(i.user.username + " is already registered")
-                    await i.reply({content: 'You are already in the queue!', ephemeral: true}).catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
-                } else {
-                    await i.reply({content: 'You have joined the queue!', ephemeral: true}).then(() => {
-                        console.log("Registering " + i.user.username)
-                        link.users.push(i.user)
-                    }).catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
-                }
-            } else if (i.customId === 'shutdown') {
-                if (i.user.id === link.startingUser.id || i.user.id === '140920915797082114') {
-                    await SpeedService.stop(link)
-                    await LinkService.drop(link)
-                    await i.reply({content: 'Toy stopped!'}).catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
-                } else {
-                    i.reply(i.user.username + " - Please don't try to stop someone else's toy.").catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
-                }
-            }
-        });
-
-        link.registrationMessage = m
-    };
-
     MessageService.prototype.pingUser = async function (link, user) {
+        let toy = Toys[link.toys[0].name]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Its your turn to control someone')
             .setAuthor('Lovense Bot')
             .setDescription("Please confirm you're here")
             .setThumbnail(imageUrl)
-            .addField('Toy Type', link.toys[0].name, true)
+            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
             .setTimestamp();
 
         const row = new MessageActionRow()
@@ -112,21 +34,25 @@ const MessageServiceModule = (function () {
                     .setStyle('PRIMARY'),
             );
 
-        console.log('Pinging user: ' + user.username)
+        console.log('Pinging for (' + link.startingUser.username + ') : ' + user.username + "")
         return user.send({embeds: [exampleEmbed], components: [row]})
     };
 
     MessageService.prototype.sendControls = async function (link, user) {
+        let toy = Toys[link.toys[0].name]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Its your turn to control someone')
             .setAuthor('Lovense Bot')
             .setDescription("Your controls are below")
             .setThumbnail(imageUrl)
-            .addField('Toy Type', link.toys[0].name, true)
-            .addField('Primary Speed', '' + link.speed, true)
-            .addField('Alternate Speed', '' + link.altSpeed, true)
-            .setTimestamp();
+            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
+            .addField('Primary Speed', '' + link.speed, true);
+        if (toy.hasAlternate) {
+            exampleEmbed.addField(toy.alternateName, '' + link.altSpeed, true);
+        }
+        exampleEmbed.addField("Timer", '' + link.timeLeft)
+        exampleEmbed.setTimestamp();
 
         const topRow = new MessageActionRow()
             .addComponents(
@@ -138,7 +64,6 @@ const MessageServiceModule = (function () {
                     .setCustomId('leave')
                     .setLabel('Leave')
                     .setStyle("DANGER"),
-
             );
 
         let main = await user.send({embeds: [exampleEmbed], components: [topRow]})
@@ -146,6 +71,7 @@ const MessageServiceModule = (function () {
         const primarySpeed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Vibration');
+
         let rows = buildControlPanel("")
         let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(e => {
             console.log("Failed to send response")
@@ -153,10 +79,10 @@ const MessageServiceModule = (function () {
         });
 
         let alt = null
-        if (link.toys[0].name === "nora" || link.toys[0].name === "edge" || link.toys[0].name === "max") {
+        if (toy.hasAlternate) {
             const altSpeed = new MessageEmbed()
                 .setColor('#0099ff')
-                .setTitle('Alternate');
+                .setTitle(toy.alternateName);
             const extraRows = buildControlPanel("alt-", "SECONDARY")
             alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(e => {
                 console.log("Failed to send response")
