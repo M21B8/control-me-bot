@@ -1,6 +1,7 @@
 const {SlashCommandBuilder} = require('@discordjs/builders');
 const {SessionService} = require('../services/SessionService.js')
 const {SessionMessageService} = require('../services/SessionMessageService.js')
+const Handler = require('../utils/HandlerUtils.js')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,10 +17,7 @@ module.exports = {
         if (interaction.guild !== null) {
             let session = await SessionService.createSession();
             if (session != null) {
-                interaction.deferReply().catch(e => {
-                    console.log("Failed to send response")
-                    console.log(e)
-                });
+                interaction.deferReply().catch(Handler.logError);
                 let playtime = interaction.options.get('playtime')
                 if (playtime != null) {
                     session.playtime = playtime.value
@@ -28,16 +26,10 @@ module.exports = {
                 session.channelId = interaction.channel.id
                 await SessionMessageService.sendSessionStart(interaction, session);
             } else {
-                interaction.reply("Fuck").catch(e => {
-                    console.log("Failed to send response")
-                    console.log(e)
-                });
+                interaction.reply("Fuck").catch(Handler.logError);
             }
         } else {
-            interaction.reply("Do this in a server dumbass").catch(e => {
-                console.log("Failed to send response")
-                console.log(e)
-            });
+            interaction.reply("Do this in a server dumbass").catch(Handler.logError);
         }
 
     },

@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const Handler = require('../utils/HandlerUtils.js');
 
 
 const SessionServiceModule = (function () {
@@ -27,10 +28,7 @@ const SessionServiceModule = (function () {
 
     SessionService.prototype.endSession = function (session) {
         if (session.startMessage != null) {
-            session.startMessage.delete().catch(e => {
-                console.log("Failed to send response")
-                console.log(e)
-            })
+            session.startMessage.delete().catch(Handler.logError)
         }
         delete this.sessions[session.id]
     }

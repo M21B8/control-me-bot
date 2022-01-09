@@ -11,8 +11,6 @@ const SpeedServiceModule = (function () {
         this.links = [];
     };
 
-
-
     SpeedService.prototype.setSpeed = async function (link, speed, isAlt = false) {
 
         let command = {

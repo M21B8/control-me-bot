@@ -1,5 +1,6 @@
 const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
 const Toys = require('../constants/Toys.js')
+const Handler = require('../utils/HandlerUtils.js')
 
 const imageUrl = "https://i.imgur.com/46AQjlT.png"
 
@@ -47,7 +48,7 @@ const MessageServiceModule = (function () {
             .setDescription("Your controls are below")
             .setThumbnail(imageUrl)
             .addField('Toy Type', toy.name + " - " + toy.emoji, true)
-            .addField('Primary Speed', '' + link.speed, true);
+            .addField('Vibration', '' + link.speed, true);
         if (toy.hasAlternate) {
             exampleEmbed.addField(toy.alternateName, '' + link.altSpeed, true);
         }
@@ -73,10 +74,7 @@ const MessageServiceModule = (function () {
             .setTitle('Vibration');
 
         let rows = buildControlPanel("")
-        let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(e => {
-            console.log("Failed to send response")
-            console.log(e)
-        });
+        let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(Handler.logError);
 
         let alt = null
         if (toy.hasAlternate) {
@@ -84,10 +82,7 @@ const MessageServiceModule = (function () {
                 .setColor('#0099ff')
                 .setTitle(toy.alternateName);
             const extraRows = buildControlPanel("alt-", "SECONDARY")
-            alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(e => {
-                console.log("Failed to send response")
-                console.log(e)
-            });
+            alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(Handler.logError);
         }
         return [main, primary, alt];
     };

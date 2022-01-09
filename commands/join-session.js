@@ -2,6 +2,7 @@ const {SlashCommandBuilder} = require('@discordjs/builders');
 const {LinkService} = require('../services/LinkService.js')
 const {SessionService} = require('../services/SessionService.js')
 const {SpeedService} = require('../services/SpeedService.js')
+const Handler = require('../utils/HandlerUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,10 +24,7 @@ module.exports = {
         }
         const session = SessionService.getSession(sessionId, interaction.channel.id)
         if (session == null) {
-            interaction.reply("Session does not exist").catch(e => {
-                console.log("Failed to send response")
-                console.log(e)
-            });
+            interaction.reply("Session does not exist").catch(Handler.logError);
             return
         }
         let link = await LinkService.connect(interaction, session)
@@ -43,9 +41,6 @@ module.exports = {
             await SpeedService.setSpeed(link, 1)
             await SpeedService.setSpeed(link, 0)
         }
-        interaction.reply("Joined Session").catch(e => {
-            console.log("Failed to send response")
-            console.log(e)
-        });
+        interaction.reply("Joined Session").catch(Handler.logError);
     },
 };

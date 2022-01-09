@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const Handler = require('../utils/HandlerUtils.js')
 
 const LinkServiceModule = (function () {
     /**
@@ -32,8 +33,13 @@ const LinkServiceModule = (function () {
                 return response;
             });
 
-            let id = response3.url.match(new RegExp('.*play\/(.*)\\?email.*$'))[1];
+            let match = response3.url.match(new RegExp('.*play\/(.*)\\?email.*$'));
 
+            if (match == null) {
+                console.log("Invalid Link")
+                return null;
+            }
+            let id = match[1]
             const link = {
                 url: 'https://c.lovense.com/v2/' + connectCode,
                 startingUser: interaction.user,
@@ -70,11 +76,7 @@ const LinkServiceModule = (function () {
                 console.log("Link is invalid")
                 return null
             }
-            console.log(json.data.leftTime)
-            console.log(json.data.leftTime / 60)
-            console.log(Math.round(json.data.leftTime / 60))
             link.totalTime = Math.round(json.data.leftTime / 60)
-            console.log(link.totalTime)
             let toys = json.data.toyData
             Object.values(toys).forEach((v) => {
                 link.toys.push({id: v.id, name: v.name})
@@ -110,20 +112,14 @@ const LinkServiceModule = (function () {
             for (const property in link.currentControlMessage) {
                 let x = link.currentControlMessage[property]
                 if (x != null) {
-                    await x.delete().catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
+                    await x.delete().catch(Handler.logError);
                 }
             }
             link.currentControlMessage = null
         }
 
         if (link.registrationMessage != null) {
-            link.registrationMessage.delete().catch(e => {
-                console.log("Failed to send response")
-                console.log(e)
-            });
+            link.registrationMessage.delete().catch(Handler.logError);
         }
         delete session.links[link.id]
     }

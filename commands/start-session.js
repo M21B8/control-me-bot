@@ -1,6 +1,7 @@
 const {SlashCommandBuilder} = require('@discordjs/builders');
 const {SessionService} = require('../services/SessionService.js');
 const {PlayService} = require('../services/PlayService.js');
+const Handler = require('../utils/HandlerUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,10 +19,7 @@ module.exports = {
         }
         const session = SessionService.getSession(sessionId, interaction.channel.id)
         if (session == null) {
-            interaction.reply("Session does not exist").catch(e => {
-                console.log("Failed to send response")
-                console.log(e)
-            });
+            interaction.reply("Session does not exist").catch(Handler.logError);
             return
         }
         let links = [];
@@ -51,9 +49,6 @@ module.exports = {
             })
             links = links.sort(() => 0.5 - Math.random())
         }, session.sessionPlaytime)
-        interaction.reply("Started Session").catch(e => {
-            console.log("Failed to send response")
-            console.log(e)
-        });
+        interaction.reply("Started Session").catch(Handler.logError);
     },
 };

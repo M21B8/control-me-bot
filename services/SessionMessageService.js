@@ -1,6 +1,7 @@
 const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
 const {SessionService} = require('../services/SessionService.js')
 const {SpeedService} = require('../services/SpeedService.js')
+const Handler = require('../utils/HandlerUtils.js')
 
 const imageUrl = "https://i.imgur.com/46AQjlT.png"
 
@@ -33,10 +34,7 @@ const SessionMessageServiceModule = (function () {
                     .setStyle('DANGER'),
             )
         ;
-        session.startMessage = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(e => {
-            console.log("Failed to send response")
-            console.log(e)
-        });
+        session.startMessage = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
 
         const collector = interaction.channel.createMessageComponentCollector();
 
@@ -46,18 +44,12 @@ const SessionMessageServiceModule = (function () {
                     return u.username === i.user.username
                 }).length > 0) {
                     console.log(i.user.username + " is already registered")
-                    await i.reply({content: 'You are already in the queue!', ephemeral: true}).catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
+                    await i.reply({content: 'You are already in the queue!', ephemeral: true}).catch(Handler.logError);
                 } else {
                     await i.reply({content: 'You have joined the queue!', ephemeral: true}).then(() => {
                         console.log("Registering " + i.user.username)
                         session.users.push(i.user)
-                    }).catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
+                    }).catch(Handler.logError);
                 }
             } else if (i.customId === 'shutdown') {
                 if (i.user.id === session.startingUser.id || i.user.id === '140920915797082114') {
@@ -66,20 +58,11 @@ const SessionMessageServiceModule = (function () {
                     });
                     SessionService.endSession(session)
 
-                    i.reply("Group session has been ended").catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
+                    i.reply("Group session has been ended").catch(Handler.logError);
                 } else if (i.user.id === '883867369250885633') {
-                    i.reply("🖕🖕🖕 I'm fucking done wid y'all 🖕🖕🖕.").catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
+                    i.reply("🖕🖕🖕 I'm fucking done wid y'all 🖕🖕🖕.").catch(Handler.logError);
                 } else {
-                    i.reply(i.user.username + " - Please don't try to stop someone else's toy.").catch(e => {
-                        console.log("Failed to send response")
-                        console.log(e)
-                    });
+                    i.reply(i.user.username + " - Please don't try to stop someone else's toy.").catch(Handler.logError);
                 }
             }
         });

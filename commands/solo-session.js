@@ -1,9 +1,9 @@
-const {MessageEmbed} = require('discord.js');
 const {SlashCommandBuilder} = require('@discordjs/builders');
 const {LinkService} = require('../services/LinkService.js')
 const {SpeedService} = require('../services/SpeedService.js')
 const {SessionService} = require('../services/SessionService.js')
 const {PlayService} = require('../services/PlayService.js')
+const {SoloMessageService} = require('../services/SoloMessageService');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -40,7 +40,21 @@ module.exports = {
             }, 5000)
             await SpeedService.setSpeed(link, 1)
             await SpeedService.setSpeed(link, 0)
-            PlayService.begin(interaction, session, link)
+
+            await SoloMessageService.sendRegistration(interaction, session, link)
+            setInterval(function () {
+                if (link.currentUser != null || link.isSearching) {
+                    return
+                }
+                if (session.users.length === 0) {
+                    if (session.playedUsers.length !== 0) {
+                        console.log("recycling played users")
+                        session.users = session.playedUsers
+                        session.playedUsers = []
+                    }
+                }
+                return PlayService.giveControl(session, link)
+            }, 1000)
         }
     },
 };
