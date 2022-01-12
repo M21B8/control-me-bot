@@ -22,12 +22,9 @@ module.exports = {
             interaction.reply("Session does not exist").catch(Handler.logError);
             return
         }
-        let links = [];
-        for (const property in session.links) {
-            links.push(session.links[property]);
-        }
 
         setInterval(function () {
+            let links = Object.values(session.links).sort(() => 0.5 - Math.random())
             if (!links.some(link => link.isSearching)) {
                 let link = links.find(link => link.currentUser == null)
                 if (link != null) {
@@ -44,10 +41,9 @@ module.exports = {
         }, 1_000)
 
         session.interval = setInterval(function () {
-            links.forEach(link => {
+            Object.values(session.links).forEach(link => {
                 PlayService.stopControl(session, link)
             })
-            links = links.sort(() => 0.5 - Math.random())
         }, session.sessionPlaytime)
         interaction.reply("Started Session").catch(Handler.logError);
     },

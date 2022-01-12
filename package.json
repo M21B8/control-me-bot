@@ -15,6 +15,7 @@
     "discord-api-types": "^0.25.2",
     "discord.js": "^13.3.1",
     "formdata-polyfill": "^4.0.10",
+    "jest": "^27.4.7",
     "node-fetch": "^2.6.6"
   },
   "devDependencies": {

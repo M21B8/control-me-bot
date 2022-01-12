@@ -91,30 +91,25 @@ const LinkServiceModule = (function () {
             return null
         }
     };
+
     LinkService.prototype.ping = async function (id) {
 
         let connectUrl = "https://c.lovense.com/app/ws/loading/" + id
 
-        return await fetch(connectUrl, {method: 'GET', headers: {}}).then(response => {
-            return response;
-        });
+        return fetch(connectUrl, {method: 'GET', headers: {}});
 
     };
 
-    LinkService.prototype.getLink = async function (linkId) {
-        delete this.links[linkId]
-    }
     LinkService.prototype.drop = async function (session, link) {
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
         if (link.currentControlMessage !== null) {
-            for (const property in link.currentControlMessage) {
-                let x = link.currentControlMessage[property]
+            Object.values(link.currentControlMessage).forEach(x => {
                 if (x != null) {
-                    await x.delete().catch(Handler.logError);
+                    x.delete().catch(Handler.logError);
                 }
-            }
+            })
             link.currentControlMessage = null
         }
 

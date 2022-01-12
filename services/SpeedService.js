@@ -1,5 +1,4 @@
-const fetch = require('node-fetch');
-const FormData = require('form-data')
+const {LovenseService} = require('../services/LovenseService.js')
 const Toys = require('../constants/Toys.js')
 
 const SpeedServiceModule = (function () {
@@ -8,7 +7,6 @@ const SpeedServiceModule = (function () {
      * @constructor
      */
     const SpeedService = function () {
-        this.links = [];
     };
 
     SpeedService.prototype.setSpeed = async function (link, speed, isAlt = false) {
@@ -45,13 +43,7 @@ const SpeedServiceModule = (function () {
             let alt = toyInfo.alternate
             command.id[toy.id][alt] = altSpeed
         }
-
-        let formData = new FormData();
-        formData.append('order', JSON.stringify(command));
-        let commandUrl = "https://c.lovense.com/app/ws/command/" + link.id
-        await fetch(commandUrl, {method: 'POST', body: formData}).then(response => {
-            return response;
-        });
+        await LovenseService.call(link.id, command)
 
         link.speed = primarySpeed
         link.altSpeed = altSpeed
@@ -63,7 +55,6 @@ const SpeedServiceModule = (function () {
     SpeedService.prototype.stop = async function (link) {
         await this.setSpeed(link, 0)
         await this.setSpeed(link, 0, true)
-        return
     }
 
     return {

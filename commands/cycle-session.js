@@ -22,17 +22,15 @@ module.exports = {
             interaction.reply("Session does not exist").catch(Handler.logError);
             return
         }
-        let links = [];
-        for (const property in session.links) {
-            links.push(session.links[property]);
-        }
+
         clearInterval(session.interval)
-        links.forEach(link => {
+        Object.values(session.links).forEach(link => {
             PlayService.prototype.stopControl(session, link)
         })
+
         session.interval = setInterval(function () {
-            links.forEach(link => {
-                PlayService.prototype.giveControl(session, link)
+            Object.values(session.links).forEach(link => {
+                PlayService.stopControl(session, link)
             })
         }, session.sessionPlaytime)
         interaction.reply("Started Session").catch(Handler.logError);
