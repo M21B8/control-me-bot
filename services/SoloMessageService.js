@@ -34,7 +34,7 @@ const SoloMessageServiceModule = (function () {
 
         exampleEmbed
             .addField('Total Control Time', "" + link.totalTime + " mins", true)
-            .addField('Individual Control Time', "" + (link.controlTime / 60_000) + " mins", true)
+            .addField('Individual Control Time', "" + Math.round(link.controlTime / 60_000) + " mins", true)
 
         const row = new MessageActionRow()
             .addComponents(
@@ -57,7 +57,7 @@ const SoloMessageServiceModule = (function () {
             content: 'Connected! You should have received a short pulse.',
             ephemeral: true
         }).catch(Handler.logError);
-        const m = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
+        const m = await interaction.channel.send({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
 
         const collector = interaction.channel.createMessageComponentCollector();
 
@@ -88,8 +88,8 @@ const SoloMessageServiceModule = (function () {
                 if (i.user.id === link.startingUser.id || i.user.id === '140920915797082114') {
                     await SpeedService.stop(link)
                     await LinkService.drop(session, link)
-                    SessionService.endSession(session)
                     await i.reply({content: 'Toy stopped!'}).catch(Handler.logError);
+                    SessionService.endSession(session)
                 } else {
                     i.reply(i.user.username + " - Please don't try to stop someone else's toy.").catch(Handler.logError);
                 }

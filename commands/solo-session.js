@@ -25,6 +25,10 @@ module.exports = {
                 .setRequired(false)),
     async execute(interaction) {
         let session = SessionService.createSession()
+        let playtime = interaction.options.get('playtime')
+        if (playtime != null) {
+            session.playtime = playtime.value
+        }
         let link = await LinkService.connect(interaction, session)
         if (link != null) {
             link.heartbeat = setInterval(async function () {

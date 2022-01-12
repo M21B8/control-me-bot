@@ -56,7 +56,7 @@ const LinkServiceModule = (function () {
             if (playParams != null) {
                 link.controlTime = playParams.value * 60_000
             }
-            if (session.sessionPlaytime != null) {
+            if (session.sessionPlaytime != null && session.sessionPlaytime > 0) {
                 link.controlTime = -1
             }
             const anon = interaction.options.get('anonymous')
@@ -104,7 +104,8 @@ const LinkServiceModule = (function () {
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
-        if (link.currentControlMessage !== null) {
+        if (link.currentControlMessage != null) {
+            console.log(link.currentControlMessage)
             Object.values(link.currentControlMessage).forEach(x => {
                 if (x != null) {
                     x.delete().catch(Handler.logError);
@@ -116,6 +117,7 @@ const LinkServiceModule = (function () {
         if (link.registrationMessage != null) {
             link.registrationMessage.delete().catch(Handler.logError);
         }
+        console.log("Link " + link.id + " has been dropped")
         delete session.links[link.id]
     }
 

@@ -12,7 +12,7 @@ const SessionServiceModule = (function () {
     };
 
 
-    SessionService.prototype.createSession = function (playtime = 60_000) {
+    SessionService.prototype.createSession = function (playtime = -1) {
         const id = crypto.randomBytes(3).toString("hex");
         const session = {
             id: id,
