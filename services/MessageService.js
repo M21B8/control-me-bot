@@ -16,9 +16,9 @@ const MessageServiceModule = (function () {
         let toy = Toys[link.toys[0].name]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
-            .setTitle('Its your turn to control someone')
+            .setTitle("It's your turn to take control")
             .setAuthor('Lovense Bot')
-            .setDescription("Please confirm you're here")
+            .setDescription("Please confirm that you're ready to take control now by clicking the 'I'm Ready' button. If you aren't able to take control, please click 'I changed my mind' and you will be removed from the controller queue")
             .setThumbnail(imageUrl)
             .addField('Toy Type', toy.name + " - " + toy.emoji, true)
             .setTimestamp();
@@ -43,16 +43,15 @@ const MessageServiceModule = (function () {
         let toy = Toys[link.toys[0].name]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
-            .setTitle('Its your turn to control someone')
+            .setTitle('You have control')
             .setAuthor('Lovense Bot')
-            .setDescription("Your controls are below")
+            .setDescription("Your controls are below. If you wish to stop controlling, 'Pass Control' will give control to the next user but keep you in the queue. 'Leave' will give control to the next user but remove you from the queue (you can rejoin from the original menu if you want to).")
             .setThumbnail(imageUrl)
             .addField('Toy Type', toy.name + " - " + toy.emoji, true)
             .addField('Vibration', '' + link.speed, true);
         if (toy.hasAlternate) {
             exampleEmbed.addField(toy.alternateName, '' + link.altSpeed, true);
         }
-        exampleEmbed.addField("Timer", '' + link.timeLeft)
         exampleEmbed.setTimestamp();
 
         const topRow = new MessageActionRow()

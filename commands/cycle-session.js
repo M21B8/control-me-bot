@@ -25,14 +25,14 @@ module.exports = {
 
         clearInterval(session.interval)
         Object.values(session.links).forEach(link => {
-            PlayService.prototype.stopControl(session, link)
+            PlayService.stopControl(session, link)
         })
 
         session.interval = setInterval(function () {
             Object.values(session.links).forEach(link => {
                 PlayService.stopControl(session, link)
             })
-        }, session.sessionPlaytime)
+        }, session.playtime)
         interaction.reply("Started Session").catch(Handler.logError);
     },
 };

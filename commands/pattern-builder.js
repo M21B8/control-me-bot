@@ -58,7 +58,7 @@ function patternCompilation(interaction) {
                     thisStep = (selectedLevel + ':' + selectedDuration + ';')
                     patternString += thisStep
                     // Delete the UI message and output the finished string
-                    message.delete()
+                    message.delete().catch(Handler.logError);
                     pattern.steps++
                     interaction.user.send('Your ' + pattern.steps + ' step pattern string is: \n' + '`' + patternString + '`')
                     break;

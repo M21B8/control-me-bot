@@ -20,7 +20,8 @@ const SessionServiceModule = (function () {
             users: [],
             timeoutUsers: [],
             playedUsers: [],
-            sessionPlaytime: playtime
+            playtime: playtime,
+            timeoutLimit: 1 // this will be configurable in the future, maybe
         };
         this.sessions[id] = session;
         return session;
@@ -29,6 +30,9 @@ const SessionServiceModule = (function () {
     SessionService.prototype.endSession = function (session) {
         if (session.startMessage != null) {
             session.startMessage.delete().catch(Handler.logError)
+        }
+        if (session.countInterval != null) {
+            clearInterval(session.countInterval)
         }
         delete this.sessions[session.id]
     }

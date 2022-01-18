@@ -48,16 +48,12 @@ const LinkServiceModule = (function () {
                 speed: 0,
                 altSpeed: 0,
                 toys: [],
-                controlTime: 60_000,
+                controlTime: 300_000,
                 maxSpeed: 100,
                 maxAlt: 100
             }
-            const playParams = interaction.options.get('playtime')
-            if (playParams != null) {
-                link.controlTime = playParams.value * 60_000
-            }
-            if (session.sessionPlaytime != null && session.sessionPlaytime > 0) {
-                link.controlTime = -1
+            if (session.playtime != null && session.playtime > 0) {
+                link.controlTime = session.playtime * 60_000
             }
             const anon = interaction.options.get('anonymous')
             if (anon != null) {
@@ -76,7 +72,7 @@ const LinkServiceModule = (function () {
                 console.log("Link is invalid")
                 return null
             }
-            link.totalTime = Math.round(json.data.leftTime / 60)
+
             let toys = json.data.toyData
             Object.values(toys).forEach((v) => {
                 link.toys.push({id: v.id, name: v.name})
@@ -116,8 +112,9 @@ const LinkServiceModule = (function () {
 
         if (link.registrationMessage != null) {
             link.registrationMessage.delete().catch(Handler.logError);
+            link.registrationMessage = null
         }
-        console.log("Link " + link.id + " has been dropped")
+        console.log("Link " + link.id + "for " + link.startingUser.username + " has been dropped")
         delete session.links[link.id]
     }
 

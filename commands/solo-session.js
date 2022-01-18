@@ -47,6 +47,7 @@ module.exports = {
 
             await SoloMessageService.sendRegistration(interaction, session, link)
             setInterval(function () {
+                SoloMessageService.updateControllerCount(session, link)
                 if (link.currentUser != null || link.isSearching) {
                     return
                 }

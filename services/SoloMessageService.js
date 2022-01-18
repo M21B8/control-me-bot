@@ -26,29 +26,30 @@ const SoloMessageServiceModule = (function () {
             .setAuthor('Lovense Bot')
             .setDescription('Someone on this server has enabled their toy for remote control.')
             .setThumbnail(imageUrl)
+            .addField('Instructions', "Click 'Queue to take Control' to join the queue of controllers. When it's your turn, the bot will send you a DM to check that you're ready to take over control. If you wish to leave the queue, please press 'Leave the Queue'" )
             .addField('Toy Type', toy.name + " - " + toy.emoji, true)
+            .addField('Controllers in Queue (played)', "" + session.users.length + "(" + session.playedUsers.length + ")", true)
 
         if (!link.anonymous) {
             exampleEmbed.addField('Toy Owner', link.startingUser.username, true)
         }
 
         exampleEmbed
-            .addField('Total Control Time', "" + link.totalTime + " mins", true)
             .addField('Individual Control Time', "" + Math.round(link.controlTime / 60_000) + " mins", true)
 
         const row = new MessageActionRow()
             .addComponents(
                 new MessageButton()
                     .setCustomId('signup')
-                    .setLabel('Sign Up')
+                    .setLabel('Queue to take Control')
                     .setStyle('PRIMARY'),
                 new MessageButton()
                     .setCustomId('leave')
-                    .setLabel('Leave')
+                    .setLabel('Leave the Queue')
                     .setStyle('SECONDARY'),
                 new MessageButton()
                     .setCustomId('shutdown')
-                    .setLabel('Shutdown')
+                    .setLabel('Stop the Session')
                     .setStyle('DANGER'),
             )
         ;
@@ -83,7 +84,7 @@ const SoloMessageServiceModule = (function () {
                 session.playedUsers = session.playedUsers.filter(u => {
                     return u.id !== i.user.id
                 })
-                i.reply({content: 'You have been removed. Goodbye!', ephemeral: true})
+                i.reply({content: 'You have been removed. Goodbye!', ephemeral: true}).catch(Handler.logError);
             } else if (i.customId === 'shutdown') {
                 if (i.user.id === link.startingUser.id || i.user.id === '140920915797082114') {
                     await SpeedService.stop(link)
@@ -91,13 +92,21 @@ const SoloMessageServiceModule = (function () {
                     await i.reply({content: 'Toy stopped!'}).catch(Handler.logError);
                     SessionService.endSession(session)
                 } else {
-                    i.reply(i.user.username + " - Please don't try to stop someone else's toy.").catch(Handler.logError);
+                    i.reply({content: i.user.username + " - Please don't try to stop someone else's toy.", ephemeral: true}).catch(Handler.logError);
                 }
             }
         });
 
         link.registrationMessage = m
     };
+
+    SoloMessageService.prototype.updateControllerCount = async function (session, link) {
+        let main = link.registrationMessage
+        if (main != null) {
+            main.embeds[0].fields[2].value = "" + session.users.length + "(" + session.playedUsers.length + ")"
+            await main.edit({embeds: [new MessageEmbed(main.embeds[0])]}).catch(Handler.logError);
+        }
+    }
 
     return {
         SoloMessageService: new SoloMessageService()

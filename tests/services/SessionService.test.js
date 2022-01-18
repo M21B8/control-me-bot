@@ -11,14 +11,14 @@ describe('Session Service tests', () => {
         expect(session1.users).not.toBeNull();
         expect(session1.playedUsers).not.toBeNull();
         expect(session1.timeoutUsers).not.toBeNull();
-        expect(session1.sessionPlaytime).toBe(60_000);
+        expect(session1.playtime).toBe(60_000);
 
         session1.channelId = 123
     });
 
     test('can create a session with set play time', () => {
         const session = SessionService.createSession(12345);
-        expect(session.sessionPlaytime).toBe(12345);
+        expect(session.playtime).toBe(12345);
     });
 
     test('can get a session', () => {

@@ -44,7 +44,7 @@ module.exports = {
             Object.values(session.links).forEach(link => {
                 PlayService.stopControl(session, link)
             })
-        }, session.sessionPlaytime)
+        }, session.playtime)
         interaction.reply("Started Session").catch(Handler.logError);
     },
 };

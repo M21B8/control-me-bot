@@ -25,12 +25,17 @@ module.exports = {
                 session.startingUser = interaction.user;
                 session.channelId = interaction.channel.id
                 await SessionMessageService.sendSessionStart(interaction, session);
+
+                session.countInterval = setInterval(function () {
+                    SessionMessageService.updateControllerCount(session)
+                }, 1_000)
             } else {
                 interaction.reply("Fuck").catch(Handler.logError);
             }
         } else {
             interaction.reply("Do this in a server dumbass").catch(Handler.logError);
         }
+
 
     },
 };

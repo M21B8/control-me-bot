@@ -34,6 +34,12 @@ const SessionMessageServiceModule = (function () {
                     .setStyle('DANGER'),
             )
         ;
+
+        exampleEmbed
+            .addField('Controllers', "" + (session.users.length + session.playedUsers.length), true)
+            .addField('Controlees', "" + Object.keys(session.links).length, true)
+
+
         session.startMessage = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
 
         const collector = interaction.channel.createMessageComponentCollector();
@@ -67,6 +73,15 @@ const SessionMessageServiceModule = (function () {
             }
         });
     };
+
+    SessionMessageService.prototype.updateControllerCount = async function (session) {
+        let main = session.startMessage
+        if (main != null) {
+            main.embeds[0].fields[1].value = "" + (session.users.length + session.playedUsers.length)
+            main.embeds[0].fields[2].value = "" + Object.keys(session.links).length
+            await main.edit({embeds: [new MessageEmbed(main.embeds[0])]}).catch(Handler.logError);
+        }
+    }
 
     return {
         SessionMessageService: new SessionMessageService()

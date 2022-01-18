@@ -71,7 +71,7 @@ const PlayServiceModule = (function () {
 
     function pingUser(session, link, selectedUser) {
         MessageService.pingUser(link, selectedUser).then((message) => {
-            const collector = message.createMessageComponentCollector({max: 1, time: 10_000});
+            const collector = message.createMessageComponentCollector({max: 1, time: 30_000});
 
             collector.on('collect', async i => {
                 if (i.customId === 'ping-yes') {
@@ -104,13 +104,14 @@ const PlayServiceModule = (function () {
                     if (selectedUser.timeouts == null) {
                         selectedUser.timeouts = 0
                     }
-                    selectedUser.send("You missed your chance! Pay Attention!").catch(Handler.logError);
                     selectedUser.timeouts = selectedUser.timeouts + 1
-                    if (selectedUser.timeouts >= 3) {
-                        selectedUser.send("You walked away from this? To the Naughty List!").catch(Handler.logError);
-                        console.log('Timing out ' + selectedUser.username + ' after 3 fails')
+                    if (selectedUser.timeouts >= session.timeoutLimit) {
+                        selectedUser.send("You missed your chance, you have been removed from the controller queue, please Sign Up again when you return").catch(Handler.logError);
+                        console.log('Timing out ' + selectedUser.username + ' after ' + session.timeoutLimit + ' fail(s)')
                         session.timeoutUsers.push(selectedUser)
                         removeUser(session, selectedUser)
+                    } else {
+                        selectedUser.send("You missed your chance! Pay Attention!").catch(Handler.logError);
                     }
                     PlayService.prototype.giveControl(session, link)
                 }
@@ -165,11 +166,8 @@ const PlayServiceModule = (function () {
             main.embeds[0].fields[1].value = '' + link.speed
             if (Toys[link.toys[0].name].hasAlternate) {
                 main.embeds[0].fields[2].value = '' + link.altSpeed
-                main.embeds[0].fields[3].value = '' + link.timeLeft
-            } else {
-                main.embeds[0].fields[2].value = '' + link.timeLeft
             }
-            main.edit({embeds: [new MessageEmbed(main.embeds[0])]})
+            main.edit({embeds: [new MessageEmbed(main.embeds[0])]}).catch(Handler.logError);
         });
     }
 

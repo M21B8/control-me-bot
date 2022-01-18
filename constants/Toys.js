@@ -31,9 +31,11 @@ module.exports = Object.freeze({
     },
     "dolce": {
         name: "Dolce",
-        emoji: "<:Diamo:929140379570298990>",
-        primary: "v",
-        hasAlternate: false,
+        emoji: "<:Dolce:929140309437321233>",
+        primary: "v1",
+        hasAlternate: true,
+        alternate: "v2",
+        alternateName: "Internal Vibration"
     },
     "ferri": {
         name: "Ferri",
