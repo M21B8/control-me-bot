@@ -159,7 +159,11 @@ const PlayServiceModule = (function () {
             if (i.customId.endsWith('stop')) {
                 await SpeedService.setSpeed(link, 0, isAlt)
             } else if (i.customId.endsWith('max')) {
-                await SpeedService.setSpeed(link, 20, isAlt)
+                let speed = link.maxSpeed
+                if (speed === -1) {
+                    speed = 20
+                }
+                await SpeedService.setSpeed(link, speed, isAlt)
             } else {
                 await setSpeed(link, i.customId, isAlt)
             }

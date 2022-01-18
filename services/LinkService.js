@@ -101,7 +101,6 @@ const LinkServiceModule = (function () {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
         if (link.currentControlMessage != null) {
-            console.log(link.currentControlMessage)
             Object.values(link.currentControlMessage).forEach(x => {
                 if (x != null) {
                     x.delete().catch(Handler.logError);

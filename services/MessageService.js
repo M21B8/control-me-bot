@@ -71,8 +71,7 @@ const MessageServiceModule = (function () {
         const primarySpeed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Vibration');
-
-        let rows = buildControlPanel("")
+        let rows = buildControlPanel(link.maxSpeed, "")
         let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(Handler.logError);
 
         let alt = null
@@ -80,14 +79,37 @@ const MessageServiceModule = (function () {
             const altSpeed = new MessageEmbed()
                 .setColor('#0099ff')
                 .setTitle(toy.alternateName);
-            const extraRows = buildControlPanel("alt-", "SECONDARY")
+            const extraRows = buildControlPanel(link.maxSpeed, "alt-", "SECONDARY")
             alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(Handler.logError);
         }
         return [main, primary, alt];
     };
 
-    function buildControlPanel(prefix, colour = "SUCCESS") {
-        const row1 = new MessageActionRow()
+    const labels = {
+        1: 'one',
+        2: 'two',
+        3: 'three',
+        4: 'four',
+        5: 'five',
+        6: 'six',
+        7: 'seven',
+        8: 'eight',
+        9: 'nine',
+        10: 'ten',
+        11: 'eleven',
+        12: 'twelve',
+        13: 'thirteen',
+        14: 'fourteen',
+        15: 'fifteen',
+        16: 'sixteen',
+        17: 'seventeen',
+        18: 'eighteen',
+        19: 'nineteen',
+        20: 'twenty',
+    }
+
+    function buildControlPanel(maxSpeed, prefix, colour = "SUCCESS") {
+        const controlRow = new MessageActionRow()
             .addComponents(
                 new MessageButton()
                     .setCustomId(prefix + 'stop')
@@ -98,99 +120,48 @@ const MessageServiceModule = (function () {
                     .setLabel('Max')
                     .setStyle(colour),
             );
-        const rowA = new MessageActionRow()
-            .addComponents(
+
+        const row1 = new MessageActionRow()
+        const row2 = new MessageActionRow()
+        const row3 = new MessageActionRow()
+        const row4 = new MessageActionRow()
+        if (maxSpeed === -1) {
+            maxSpeed = 20;
+        }
+        for (let i = 1; i <= maxSpeed; i++) {
+            let row = null
+            if (i <= 5) {
+                row = row1
+            } else if (i <= 10) {
+                row = row2
+            } else if (i <= 15) {
+                row = row3
+            } else if (i <= 20) {
+                row = row4
+            } else {
+                return
+            }
+            row.addComponents(
                 new MessageButton()
-                    .setCustomId(prefix + 'one')
-                    .setLabel('1')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'two')
-                    .setLabel('2')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'three')
-                    .setLabel('3')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'four')
-                    .setLabel('4')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'five')
-                    .setLabel('5')
-                    .setStyle(colour),
-            );
-        const rowB = new MessageActionRow()
-            .addComponents(
-                new MessageButton()
-                    .setCustomId(prefix + 'six')
-                    .setLabel('6')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'seven')
-                    .setLabel('7')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'eight')
-                    .setLabel('8')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'nine')
-                    .setLabel('9')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'ten')
-                    .setLabel('10')
-                    .setStyle(colour),
-            );
-        const rowC = new MessageActionRow()
-            .addComponents(
-                new MessageButton()
-                    .setCustomId(prefix + 'eleven')
-                    .setLabel('11')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'twelve')
-                    .setLabel('12')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'thirteen')
-                    .setLabel('13')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'fourteen')
-                    .setLabel('14')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'fifteen')
-                    .setLabel('15')
-                    .setStyle(colour),
-            );
-        const rowD = new MessageActionRow()
-            .addComponents(
-                new MessageButton()
-                    .setCustomId(prefix + 'sixteen')
-                    .setLabel('16')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'seventeen')
-                    .setLabel('17')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'eighteen')
-                    .setLabel('18')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'nineteen')
-                    .setLabel('19')
-                    .setStyle(colour),
-                new MessageButton()
-                    .setCustomId(prefix + 'twenty')
-                    .setLabel('20')
-                    .setStyle(colour),
-            );
-        return [row1, rowA, rowB, rowC, rowD]
+                    .setCustomId(prefix + labels[i])
+                    .setLabel('' + i)
+                    .setStyle(colour)
+            )
+        }
+        let rows = [controlRow]
+        if (maxSpeed >= 1) {
+            rows.push(row1)
+        }
+        if (maxSpeed >= 6) {
+            rows.push(row2)
+        }
+        if (maxSpeed >= 11) {
+            rows.push(row3)
+        }
+        if (maxSpeed >= 16) {
+            rows.push(row4)
+        }
+        return rows
     }
 
     return {

@@ -7,7 +7,7 @@ const {SoloMessageService} = require('../services/SoloMessageService');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('solo')
+        .setName('solox')
         .setDescription('Connects to a Lovense Link!')
         .addStringOption(option =>
             option.setName('link')
@@ -22,7 +22,13 @@ module.exports = {
             option
                 .setName("anonymous")
                 .setDescription("This will prevent your name being show on the 'registration' screen")
-                .setRequired(false)),
+                .setRequired(false))
+        .addIntegerOption(option =>
+            option.setName('max-speed')
+                .setDescription('The maximum speed you want the toy to run at (1-20). Default is 20.')
+                .setRequired(false))
+    ,
+
     async execute(interaction) {
         let session = SessionService.createSession()
         let playtime = interaction.options.get('playtime')
@@ -31,6 +37,18 @@ module.exports = {
         }
         let link = await LinkService.connect(interaction, session)
         if (link != null) {
+            let maxSpeed = interaction.options.get('max-speed')
+            if (maxSpeed != null) {
+                let speed = maxSpeed.value
+                if (speed < 1) {
+                    speed = 1
+                } else if (speed > 20) {
+                    speed = 20
+                }
+                link.maxSpeed = speed
+            } else {
+                link.maxSpeed = -1
+            }
             link.heartbeat = setInterval(async function () {
                 let response = await LinkService.ping(link.id)
                 const resp = await response.json()

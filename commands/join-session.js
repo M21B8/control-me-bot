@@ -29,6 +29,7 @@ module.exports = {
         }
         let link = await LinkService.connect(interaction, session)
         if (link != null) {
+            link.maxSpeed = -1
             link.heartbeat = setInterval(async function () {
                 let response = await LinkService.ping(link.id)
                 const data = await response.json()
