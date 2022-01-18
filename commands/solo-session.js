@@ -7,7 +7,7 @@ const {SoloMessageService} = require('../services/SoloMessageService');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('solox')
+        .setName('solo')
         .setDescription('Connects to a Lovense Link!')
         .addStringOption(option =>
             option.setName('link')
