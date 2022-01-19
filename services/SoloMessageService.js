@@ -4,6 +4,7 @@ const {SpeedService} = require('../services/SpeedService')
 const {SessionService} = require('../services/SessionService')
 const {PlayService} = require('../services/PlayService')
 const Toys = require('../constants/Toys.js')
+const ServerPings = require('../constants/ServerPings.js')
 const UserUtils = require('../utils/UserUtils.js')
 const Handler = require('../utils/HandlerUtils.js')
 
@@ -20,6 +21,7 @@ const SoloMessageServiceModule = (function () {
 
     SoloMessageService.prototype.sendRegistration = async function (interaction, session, link) {
         let toy = Toys[link.toys[0].name]
+        let ServerPing = ServerPings[interaction.guildId]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('A Lovense is available for control')
@@ -58,7 +60,7 @@ const SoloMessageServiceModule = (function () {
             content: 'Connected! You should have received a short pulse.',
             ephemeral: true
         }).catch(Handler.logError);
-        const m = await interaction.channel.send({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
+        const m = await interaction.channel.send({content: ServerPing, embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
         const collector = m.createMessageComponentCollector({});
 
         collector.on('collect', async i => {

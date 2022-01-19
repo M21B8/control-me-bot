@@ -2,6 +2,7 @@ const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
 const {SessionService} = require('../services/SessionService.js')
 const {SpeedService} = require('../services/SpeedService.js')
 const Handler = require('../utils/HandlerUtils.js')
+const ServerPings = require('../constants/ServerPings.js')
 
 const imageUrl = "https://i.imgur.com/46AQjlT.png"
 
@@ -14,6 +15,7 @@ const SessionMessageServiceModule = (function () {
     };
 
     SessionMessageService.prototype.sendSessionStart = async function (interaction, session) {
+        let ServerPing = ServerPings[interaction.guildId]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('A Group Lovense session has been started')
@@ -40,7 +42,7 @@ const SessionMessageServiceModule = (function () {
             .addField('Controlees', "" + Object.keys(session.links).length, true)
 
 
-        session.startMessage = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
+        session.startMessage = await interaction.followUp({content: ServerPing, embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
 
         const collector = session.startMessage.createMessageComponentCollector();
 
