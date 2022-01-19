@@ -69,7 +69,7 @@ const SoloMessageServiceModule = (function () {
                     await i.reply({content: 'You are already in the queue!', ephemeral: true}).catch(Handler.logError);
                 } else {
                     await i.reply({content: 'You have joined the queue!', ephemeral: true}).then(() => {
-                        console.log("Registering " + i.user.username)
+                        console.log("Registering " + i.user.username + ' for (' + link.startingUser.username + ')')
                         session.users.push(i.user)
                     }).catch(Handler.logError);
                 }

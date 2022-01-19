@@ -97,6 +97,9 @@ const LinkServiceModule = (function () {
     };
 
     LinkService.prototype.drop = async function (session, link) {
+        if (link.timeout != null) {
+            clearTimeout(link.countdown)
+        }
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
