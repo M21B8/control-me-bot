@@ -1,0 +1,33 @@
+{
+  "result": true,
+  "code": 0,
+  "message": null,
+  "data": {
+    "startTimer": false,
+    "leftTime": 1200,
+    "allow2way": false,
+    "modelSyncTid": "",
+    "version": "101",
+    "codeState": "0",
+    "toyData": {
+      "d01b01d78ebd": {
+        "version ": 1,
+        "name": "ambi",
+        "id": "d01b01d78ebd",
+        "battery": "100",
+        "status": 1
+      },
+      "f04803d12958": {
+        "version ": 1,
+        "name": "dolce",
+        "id": "f04803d12958",
+        "battery": "100",
+        "status": 1
+      }
+    },
+    "customerVersion": "101",
+    "status": "controlling",
+    "toy": "ambi,dolce"
+  }
+}
+

@@ -100,6 +100,9 @@ const LinkServiceModule = (function () {
         if (link.timeout != null) {
             clearTimeout(link.countdown)
         }
+        if (link.findController != null) {
+            clearInterval(link.findController)
+        }
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }

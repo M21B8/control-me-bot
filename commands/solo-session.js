@@ -54,7 +54,6 @@ module.exports = {
                 const resp = await response.json()
                 if (resp.status === 429 || resp.code === 400) {
                     clearInterval(link.heartbeat)
-                    console.log('dropping')
                     await LinkService.drop(session, link)
                 } else if (resp.data != null && resp.data.timeLeft == null) {
                     link.timeLeft = resp.data.leftTime
@@ -64,7 +63,7 @@ module.exports = {
             await SpeedService.setSpeed(link, 0)
 
             await SoloMessageService.sendRegistration(interaction, session, link)
-            setInterval(function () {
+            link.findController = setInterval(function () {
                 SoloMessageService.updateControllerCount(session, link)
                 if (link.currentUser != null || link.isSearching) {
                     return
@@ -77,7 +76,7 @@ module.exports = {
                     }
                 }
                 return PlayService.giveControl(session, link)
-            }, 1000)
+            }, 5000)
         }
     },
 };

@@ -6,7 +6,7 @@ const Handler = require('../utils/HandlerUtils.js')
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('skip')
-        .setDescription('Creates a group Lovense Link!')
+        .setDescription('This will skip the current controller (in case they went afk)')
     ,
     async execute(interaction) {
         // has to be via DM
