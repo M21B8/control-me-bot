@@ -55,8 +55,6 @@ module.exports = {
                 if (resp.status === 429 || resp.code === 400) {
                     clearInterval(link.heartbeat)
                     await LinkService.drop(session, link)
-                } else if (resp.data != null && resp.data.timeLeft == null) {
-                    link.timeLeft = resp.data.leftTime
                 }
             }, 5000)
             await SpeedService.setSpeed(link, 1)
