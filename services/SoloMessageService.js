@@ -1,7 +1,4 @@
 const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
-const {LinkService} = require('../services/LinkService')
-const {SpeedService} = require('../services/SpeedService')
-const {SessionService} = require('../services/SessionService')
 const {PlayService} = require('../services/PlayService')
 const Toys = require('../constants/Toys.js')
 const ServerPings = require('../constants/ServerPings.js')
@@ -49,17 +46,9 @@ const SoloMessageServiceModule = (function () {
                     .setCustomId('leave')
                     .setLabel('Leave the Queue')
                     .setStyle('SECONDARY'),
-                new MessageButton()
-                    .setCustomId('shutdown')
-                    .setLabel('Stop the Session')
-                    .setStyle('DANGER'),
             )
         ;
 
-        await interaction.reply({
-            content: 'Connected! You should have received a short pulse.',
-            ephemeral: true
-        }).catch(Handler.logError);
         const m = await interaction.channel.send({content: ServerPing, embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
         const collector = m.createMessageComponentCollector({});
 
@@ -86,15 +75,6 @@ const SoloMessageServiceModule = (function () {
                     return u.id !== i.user.id
                 })
                 i.reply({content: 'You have been removed. Goodbye!', ephemeral: true}).catch(Handler.logError);
-            } else if (i.customId === 'shutdown') {
-                if (i.user.id === link.startingUser.id || i.user.id === '140920915797082114') {
-                    await SpeedService.stop(link)
-                    await LinkService.drop(session, link)
-                    await i.reply({content: 'Toy stopped!'}).catch(Handler.logError);
-                    SessionService.endSession(session)
-                } else {
-                    i.reply({content: i.user.username + " - Please don't try to stop someone else's toy.", ephemeral: true}).catch(Handler.logError);
-                }
             }
         });
 

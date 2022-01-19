@@ -3,7 +3,9 @@ const {LinkService} = require('../services/LinkService.js')
 const {SpeedService} = require('../services/SpeedService.js')
 const {SessionService} = require('../services/SessionService.js')
 const {PlayService} = require('../services/PlayService.js')
-const {SoloMessageService} = require('../services/SoloMessageService');
+const {SoloMessageService} = require('../services/SoloMessageService.js');
+const {SessionOwnerMessageService} = require('../services/SessionOwnerMessageService.js');
+const Handler = require('../utils/HandlerUtils.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -64,6 +66,12 @@ module.exports = {
             await SpeedService.setSpeed(link, 1)
             await SpeedService.setSpeed(link, 0)
 
+            await interaction.reply({
+                content: 'Connected! You should have received a short pulse.',
+                ephemeral: true
+            }).catch(Handler.logError);
+
+            await SessionOwnerMessageService.sendOwnerPanel(session, link )
             await SoloMessageService.sendRegistration(interaction, session, link)
             link.findController = setInterval(function () {
                 SoloMessageService.updateControllerCount(session, link)
