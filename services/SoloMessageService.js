@@ -59,8 +59,7 @@ const SoloMessageServiceModule = (function () {
             ephemeral: true
         }).catch(Handler.logError);
         const m = await interaction.channel.send({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
-
-        const collector = interaction.channel.createMessageComponentCollector();
+        const collector = m.createMessageComponentCollector({});
 
         collector.on('collect', async i => {
             if (i.customId === 'signup') {

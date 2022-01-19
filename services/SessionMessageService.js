@@ -42,7 +42,7 @@ const SessionMessageServiceModule = (function () {
 
         session.startMessage = await interaction.followUp({embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
 
-        const collector = interaction.channel.createMessageComponentCollector();
+        const collector = session.startMessage.createMessageComponentCollector();
 
         collector.on('collect', async i => {
             if (i.customId === 'signup') {

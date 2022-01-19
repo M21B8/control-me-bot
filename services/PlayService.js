@@ -51,6 +51,7 @@ const PlayServiceModule = (function () {
                 if (link.currentUser != null) {
                     if (link.controlTime > 0) {
                         link.countdown = setTimeout(function () {
+                            console.log('Giving Control A')
                             PlayService.prototype.giveControl(session, link)
                         }, link.controlTime)
                     }
@@ -60,7 +61,6 @@ const PlayServiceModule = (function () {
             } else {
                 session.users = session.playedUsers
                 session.playedUsers = []
-                return PlayService.prototype.giveControl(session, link)
             }
         }
         link.isSearching = true
@@ -76,26 +76,29 @@ const PlayServiceModule = (function () {
             collector.on('collect', async i => {
                 if (i.customId === 'ping-yes') {
                     if (session.users.some(user => user.id === selectedUser.id)) {
+                        link.currentUser = selectedUser
                         link.isSearching = false
                         console.log(selectedUser.username + " took control of " + link.startingUser.username)
                         i.deferUpdate().catch(Handler.logError);
                         await PlayService.prototype.stopControl(session, link)
                         selectedUser.timeouts = 0
-                        link.currentUser = selectedUser
                         removeUser(session, selectedUser)
                         PlayService.prototype.sendControls(session, link, selectedUser)
                         if (link.controlTime > 0) {
                             link.countdown = setTimeout(function () {
+                                console.log('Giving Control: Play Timeout')
                                 PlayService.prototype.giveControl(session, link)
                             }, link.controlTime)
                         }
                     } else {
                         i.reply('You seen to have left the game...').catch(Handler.logError);
+                        console.log('Giving Control: Controller Not in game')
                         PlayService.prototype.giveControl(session, link)
                     }
                 } else if (i.customId === 'ping-no') {
                     i.reply('You will be removed from the play queue').catch(Handler.logError);
                     removeUser(session, selectedUser)
+                    console.log('Giving Control: Controller declined')
                     PlayService.prototype.giveControl(session, link)
                 }
             });
@@ -113,6 +116,7 @@ const PlayServiceModule = (function () {
                     } else {
                         selectedUser.send("You missed your chance! Pay Attention!").catch(Handler.logError);
                     }
+                    console.log('Giving Control: No Response')
                     PlayService.prototype.giveControl(session, link)
                 }
                 message.delete().catch(Handler.logError);

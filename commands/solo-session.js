@@ -49,6 +49,10 @@ module.exports = {
             } else {
                 link.maxSpeed = -1
             }
+            const anon = interaction.options.get('anonymous')
+            if (anon != null) {
+                link.anonymous = anon.value
+            }
             link.heartbeat = setInterval(async function () {
                 let response = await LinkService.ping(link.id)
                 const resp = await response.json()
@@ -73,6 +77,7 @@ module.exports = {
                         session.playedUsers = []
                     }
                 }
+                console.log('Giving Control: Top level interval')
                 return PlayService.giveControl(session, link)
             }, 5000)
         }

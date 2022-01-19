@@ -55,10 +55,6 @@ const LinkServiceModule = (function () {
             if (session.playtime != null && session.playtime > 0) {
                 link.controlTime = session.playtime * 60_000
             }
-            const anon = interaction.options.get('anonymous')
-            if (anon != null) {
-                link.anonymous = anon.value
-            }
 
             const response4 = await LinkService.prototype.ping(id)
 
