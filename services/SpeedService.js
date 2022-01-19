@@ -48,7 +48,6 @@ const SpeedServiceModule = (function () {
         link.speed = primarySpeed
         link.altSpeed = altSpeed
 
-        console.log("speed set to: " + speed)
         return speed
     }
 
