@@ -1,5 +1,6 @@
 const {SlashCommandBuilder} = require('@discordjs/builders');
 const {LinkService} = require('../services/LinkService.js')
+const {LovenseService} = require('../services/LovenseService.js')
 const {SpeedService} = require('../services/SpeedService.js')
 const {SessionService} = require('../services/SessionService.js')
 const {PlayService} = require('../services/PlayService.js')
@@ -56,7 +57,7 @@ module.exports = {
                 link.anonymous = anon.value
             }
             link.heartbeat = setInterval(async function () {
-                let response = await LinkService.ping(link.id)
+                let response = await LovenseService.ping(link.id)
                 const resp = await response.json()
                 if (resp.status === 429 || resp.code === 400) {
                     clearInterval(link.heartbeat)

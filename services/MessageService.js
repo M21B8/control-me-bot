@@ -48,7 +48,7 @@ const MessageServiceModule = (function () {
             .setDescription("Your controls are below. If you wish to stop controlling, 'Pass Control' will give control to the next user but keep you in the queue. 'Leave' will give control to the next user but remove you from the queue (you can rejoin from the original menu if you want to).")
             .setThumbnail(imageUrl)
             .addField('Toy Type', toy.name + " - " + toy.emoji, true)
-            .addField('Vibration', '' + link.speed, true);
+            .addField(toy.primaryName != null ? toy.primaryName : 'Vibration', '' + link.speed, true);
         if (toy.hasAlternate) {
             exampleEmbed.addField(toy.alternateName, '' + link.altSpeed, true);
         }
@@ -70,7 +70,7 @@ const MessageServiceModule = (function () {
 
         const primarySpeed = new MessageEmbed()
             .setColor('#0099ff')
-            .setTitle('Vibration');
+            .setTitle(toy.primaryName != null ? toy.primaryName : 'Vibration');
         let rows = buildControlPanel(link.maxSpeed, "")
         let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(Handler.logError);
 

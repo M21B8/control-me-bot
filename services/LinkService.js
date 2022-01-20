@@ -1,5 +1,5 @@
-const fetch = require('node-fetch');
 const Handler = require('../utils/HandlerUtils.js')
+const {LovenseService} = require('../services/LovenseService.js')
 
 const LinkServiceModule = (function () {
     /**
@@ -21,19 +21,10 @@ const LinkServiceModule = (function () {
             console.log('already active link. weird huh?')
             return null
         }
-        const response = await fetch("https://c.lovense.com/c/" + connectCode, {
-            method: "GET"
-        }).then(response => {
-            return response;
-        });
-        if (response.status === 200 && response.url.indexOf(connectCode) === -1) {
-            const nextUrl = response.url.replace("/ws/", "/ws2/");
+        const response = await LovenseService.connect(connectCode)
 
-            const response3 = await fetch(nextUrl, {method: 'GET'}).then(response => {
-                return response;
-            });
-
-            let match = response3.url.match(new RegExp('.*play\/(.*)\\?email.*$'));
+        if (response.status === 200) {
+            let match = response.url.match(new RegExp('.*play\/(.*)\\?email.*$'));
 
             if (match == null) {
                 console.log("Invalid Link")
@@ -56,7 +47,7 @@ const LinkServiceModule = (function () {
                 link.controlTime = session.playtime * 60_000
             }
 
-            const response4 = await LinkService.prototype.ping(id)
+            const response4 = await LovenseService.ping(id)
 
             const json = await response4.json()
             if (json.status === 429) {
@@ -77,23 +68,13 @@ const LinkServiceModule = (function () {
             console.log('Connected to: ' + connectCode);
             session.links[id] = link
             return link
-
-        } else {
-            console.log('Link already used');
-            return null
         }
     };
 
-    LinkService.prototype.ping = async function (id) {
 
-        let connectUrl = "https://c.lovense.com/app/ws/loading/" + id
-
-        return fetch(connectUrl, {method: 'GET', headers: {}});
-
-    };
 
     LinkService.prototype.drop = async function (session, link) {
-        if (link.timeout != null) {
+        if (link.countdown != null) {
             clearTimeout(link.countdown)
         }
         if (link.findController != null) {

@@ -76,11 +76,10 @@ const PlayServiceModule = (function () {
             collector.on('collect', async i => {
                 if (i.customId === 'ping-yes') {
                     if (session.users.some(user => user.id === selectedUser.id)) {
-                        link.currentUser = selectedUser
-                        link.isSearching = false
-                        console.log(selectedUser.username + " took control of " + link.startingUser.username)
                         i.deferUpdate().catch(Handler.logError);
                         await PlayService.prototype.stopControl(session, link)
+                        link.currentUser = selectedUser
+                        console.log(selectedUser.username + " took control of " + link.startingUser.username)
                         selectedUser.timeouts = 0
                         removeUser(session, selectedUser)
                         PlayService.prototype.sendControls(session, link, selectedUser)
@@ -90,6 +89,7 @@ const PlayServiceModule = (function () {
                                 PlayService.prototype.giveControl(session, link)
                             }, link.controlTime)
                         }
+                        link.isSearching = false
                     } else {
                         i.reply('You seen to have left the game...').catch(Handler.logError);
                         console.log('Giving Control: Controller Not in game')
@@ -203,11 +203,11 @@ const PlayServiceModule = (function () {
             const mainCollector = main.createMessageComponentCollector();
             mainCollector.on('collect', async i => {
                 if (i.customId === 'leave') {
-                    console.log(link.currentUser.username + ' has left')
+                    console.log(user.username + ' has left')
                     await endEarly(link, session.timeoutUsers)
                     i.reply('Control will be passed to the next user. You have been removed from the list of players. Thanks for playing.').catch(Handler.logError);
                 } else if (i.customId === 'pass') {
-                    console.log(link.currentUser.username + ' has passed control')
+                    console.log(user.username + ' has passed control')
                     await endEarly(link, session.playedUsers)
                     i.reply('Control will be passed to the next user. Thanks for playing.').catch(Handler.logError);
                 } else {
