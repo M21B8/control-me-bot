@@ -51,7 +51,7 @@ const PlayServiceModule = (function () {
                 if (link.currentUser != null) {
                     if (link.controlTime > 0) {
                         link.countdown = setTimeout(function () {
-                            console.log('Giving Control A')
+                            console.log('Giving Control Again')
                             PlayService.prototype.giveControl(session, link)
                         }, link.controlTime)
                     }
@@ -83,6 +83,14 @@ const PlayServiceModule = (function () {
                         selectedUser.timeouts = 0
                         removeUser(session, selectedUser)
                         PlayService.prototype.sendControls(session, link, selectedUser)
+                        if (link.startTimestamp == null) {
+                            link.startTimestamp = new Date()
+                        }
+                        if (link.controllers[selectedUser.id] == null) {
+                            link.controllers[selectedUser.id] = 0
+                        }
+                        link.controllers[selectedUser.id] = link.controllers[selectedUser.id] + 1
+
                         if (link.controlTime > 0) {
                             link.countdown = setTimeout(function () {
                                 console.log('Giving Control: Play Timeout')

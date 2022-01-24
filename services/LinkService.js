@@ -1,5 +1,6 @@
 const Handler = require('../utils/HandlerUtils.js')
 const {LovenseService} = require('../services/LovenseService.js')
+const {SoloMessageService} = require('../services/SoloMessageService.js')
 
 const LinkServiceModule = (function () {
     /**
@@ -41,7 +42,9 @@ const LinkServiceModule = (function () {
                 toys: [],
                 controlTime: 300_000,
                 maxSpeed: 100,
-                maxAlt: 100
+                maxAlt: 100,
+                startTimestamp: null,
+                controllers:{},
             }
             if (session.playtime != null && session.playtime > 0) {
                 link.controlTime = session.playtime * 60_000
@@ -93,10 +96,9 @@ const LinkServiceModule = (function () {
         }
 
         if (link.registrationMessage != null) {
-            link.registrationMessage.delete().catch(Handler.logError);
-            link.registrationMessage = null
+            SoloMessageService.sendPostSession(session, link)
         }
-        console.log("Link " + link.id + "for " + link.startingUser.username + " has been dropped")
+        console.log("Link " + link.id + " for " + link.startingUser.username + " has been dropped")
         delete session.links[link.id]
     }
 

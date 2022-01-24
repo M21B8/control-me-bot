@@ -25,7 +25,7 @@ const SoloMessageServiceModule = (function () {
             .setAuthor('Lovense Bot')
             .setDescription('Someone on this server has enabled their toy for remote control.')
             .setThumbnail(imageUrl)
-            .addField('Instructions', "Click 'Queue to take Control' to join the queue of controllers. When it's your turn, the bot will send you a DM to check that you're ready to take over control. If you wish to leave the queue, please press 'Leave the Queue'" )
+            .addField('Instructions', "Click 'Queue to take Control' to join the queue of controllers. When it's your turn, the bot will send you a DM to check that you're ready to take over control. If you wish to leave the queue, please press 'Leave the Queue'")
             .addField('Toy Type', toy.name + " - " + toy.emoji, true)
             .addField('Controllers in Queue (played)', "" + session.users.length + "(" + session.playedUsers.length + ")", true)
 
@@ -49,7 +49,11 @@ const SoloMessageServiceModule = (function () {
             )
         ;
 
-        const m = await interaction.channel.send({content: ServerPing, embeds: [exampleEmbed], components: [row]}).catch(Handler.logError);
+        const m = await interaction.channel.send({
+            content: ServerPing,
+            embeds: [exampleEmbed],
+            components: [row]
+        }).catch(Handler.logError);
         const collector = m.createMessageComponentCollector({});
 
         collector.on('collect', async i => {
@@ -80,6 +84,25 @@ const SoloMessageServiceModule = (function () {
 
         link.registrationMessage = m
     };
+
+    SoloMessageService.prototype.sendPostSession = async function (session, link) {
+        let toy = Toys[link.toys[0].name]
+        let timePeriod = 0;
+        if (link.startTimestamp != null) {
+            timePeriod = Math.round((new Date() - link.startTimestamp) / 60000)
+        }
+
+        const exampleEmbed = new MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('Session Finished')
+            .setAuthor('Lovense Bot')
+            .setDescription('This Lovense Session has finished.')
+            .setThumbnail(imageUrl)
+            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
+            .addField("Control Time", "" + timePeriod + " minutes", true)
+
+        link.registrationMessage.edit({embeds: [exampleEmbed], components: []})
+    }
 
     SoloMessageService.prototype.updateControllerCount = async function (session, link) {
         let main = link.registrationMessage
