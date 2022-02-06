@@ -1,5 +1,6 @@
 const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
 const Toys = require('../constants/Toys.js')
+const ToyUtils = require('../utils/ToyUtils.js')
 const Handler = require('../utils/HandlerUtils.js')
 
 const imageUrl = "https://i.imgur.com/46AQjlT.png"
@@ -13,15 +14,15 @@ const MessageServiceModule = (function () {
     };
 
     MessageService.prototype.pingUser = async function (link, user) {
-        let toy = Toys[link.toys[0].name]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle("It's your turn to take control")
             .setAuthor('Lovense Bot')
             .setDescription("Please confirm that you're ready to take control now by clicking the 'I'm Ready' button. If you aren't able to take control, please click 'I changed my mind' and you will be removed from the controller queue")
             .setThumbnail(imageUrl)
-            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
             .setTimestamp();
+
+        exampleEmbed.addField('Toy Type', ToyUtils.formatToyName(link), true)
 
         const row = new MessageActionRow()
             .addComponents(
@@ -40,18 +41,16 @@ const MessageServiceModule = (function () {
     };
 
     MessageService.prototype.sendControls = async function (link, user) {
-        let toy = Toys[link.toys[0].name]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('You have control')
             .setAuthor('Lovense Bot')
             .setDescription("Your controls are below. If you wish to stop controlling, 'Pass Control' will give control to the next user but keep you in the queue. 'Leave' will give control to the next user but remove you from the queue (you can rejoin from the original menu if you want to).")
             .setThumbnail(imageUrl)
-            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
-            .addField(toy.primaryName != null ? toy.primaryName : 'Vibration', '' + link.speed, true);
-        if (toy.hasAlternate) {
-            exampleEmbed.addField(toy.alternateName, '' + link.altSpeed, true);
-        }
+
+        exampleEmbed
+            .addField('Toy Type', ToyUtils.formatToyName(link), true)
+
         exampleEmbed.setTimestamp();
 
         const topRow = new MessageActionRow()
@@ -67,22 +66,37 @@ const MessageServiceModule = (function () {
             );
 
         let main = await user.send({embeds: [exampleEmbed], components: [topRow]})
-
-        const primarySpeed = new MessageEmbed()
-            .setColor('#0099ff')
-            .setTitle(toy.primaryName != null ? toy.primaryName : 'Vibration');
-        let rows = buildControlPanel(link.maxSpeed, "")
-        let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(Handler.logError);
-
-        let alt = null
-        if (toy.hasAlternate) {
-            const altSpeed = new MessageEmbed()
-                .setColor('#0099ff')
-                .setTitle(toy.alternateName);
-            const extraRows = buildControlPanel(link.maxSpeed, "alt-", "SECONDARY")
-            alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(Handler.logError);
+        let controlEmbeds = {
+            main: main,
+            toys: {}
         }
-        return [main, primary, alt];
+
+        let sendToyControl = async function(toy) {
+            const iToy = Toys[toy.name];
+            const primarySpeed = new MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle(iToy.name + " - " + (iToy.primaryName != null ? iToy.primaryName : 'Vibration'));
+            let rows = buildControlPanel(toy.maxSpeed, "")
+            let primary = await user.send({embeds: [primarySpeed], components: rows}).catch(Handler.logError);
+            let alt = null
+            if (iToy.hasAlternate) {
+                const altSpeed = new MessageEmbed()
+                    .setColor('#0099ff')
+                    .setTitle(iToy.name + " - " + iToy.alternateName);
+                const extraRows = buildControlPanel(toy.maxSpeed, "alt-", "SECONDARY")
+                alt = await user.send({embeds: [altSpeed], components: extraRows}).catch(Handler.logError);
+            }
+            controlEmbeds.toys[toy.id] = {
+                primary: primary,
+                alternate: alt
+            }
+        }
+
+        for (const toy of link.toys) {
+            await sendToyControl(toy)
+        }
+
+        return controlEmbeds;
     };
 
     const labels = {

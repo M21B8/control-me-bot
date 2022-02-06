@@ -86,5 +86,17 @@ module.exports = Object.freeze({
         primary: "v",
         hasAlternate: false,
     },
+    "calor": {
+        name: "Calor",
+        emoji: "❓",
+        primary: "v",
+        hasAlternate: false,
+    },
+    "mission": {
+        name: "Mission",
+        emoji: "❓",
+        primary: "v",
+        hasAlternate: false,
+    },
 });
 

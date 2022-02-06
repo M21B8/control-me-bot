@@ -37,12 +37,8 @@ const LinkServiceModule = (function () {
                 startingUser: interaction.user,
                 connectCode: connectCode,
                 id: id,
-                speed: 0,
-                altSpeed: 0,
                 toys: [],
                 controlTime: 300_000,
-                maxSpeed: 100,
-                maxAlt: 100,
                 startTimestamp: null,
                 controllers:{},
             }
@@ -65,7 +61,14 @@ const LinkServiceModule = (function () {
 
             let toys = json.data.toyData
             Object.values(toys).forEach((v) => {
-                link.toys.push({id: v.id, name: v.name})
+                link.toys.push({
+                    id: v.id,
+                    name: v.name,
+                    maxSpeed: 100,
+                    maxAlt: 100,
+                    speed: 0,
+                    altSpeed: 0,
+                })
             })
 
             console.log('Connected to: ' + connectCode);
@@ -83,13 +86,18 @@ const LinkServiceModule = (function () {
         if (link.findController != null) {
             clearInterval(link.findController)
         }
+        if (link.heartbeat != null) {
+            clearInterval(link.heartbeat)
+        }
         if (link.currentUser != null) {
             link.currentUser.send('This toy has been stopped. Hope you had fun!')
         }
         if (link.currentControlMessage != null) {
-            Object.values(link.currentControlMessage).forEach(x => {
-                if (x != null) {
-                    x.delete().catch(Handler.logError);
+            link.currentControlMessage.main.delete().catch(Handler.logError);
+            Object.values(link.currentControlMessage.toys).forEach(toyControl => {
+                toyControl.primary.delete().catch(Handler.logError);
+                if (toyControl.alternate != null) {
+                    toyControl.alternate.delete().catch(Handler.logError);
                 }
             })
             link.currentControlMessage = null

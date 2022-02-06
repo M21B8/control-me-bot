@@ -1,6 +1,6 @@
 const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
 const {PlayService} = require('../services/PlayService')
-const Toys = require('../constants/Toys.js')
+const ToyUtils = require('../utils/ToyUtils.js')
 const ServerPings = require('../constants/ServerPings.js')
 const UserUtils = require('../utils/UserUtils.js')
 const Handler = require('../utils/HandlerUtils.js')
@@ -17,7 +17,6 @@ const SoloMessageServiceModule = (function () {
 
 
     SoloMessageService.prototype.sendRegistration = async function (interaction, session, link) {
-        let toy = Toys[link.toys[0].name]
         let ServerPing = ServerPings[interaction.guildId]
         const exampleEmbed = new MessageEmbed()
             .setColor('#0099ff')
@@ -26,7 +25,10 @@ const SoloMessageServiceModule = (function () {
             .setDescription('Someone on this server has enabled their toy for remote control.')
             .setThumbnail(imageUrl)
             .addField('Instructions', "Click 'Queue to take Control' to join the queue of controllers. When it's your turn, the bot will send you a DM to check that you're ready to take over control. If you wish to leave the queue, please press 'Leave the Queue'")
-            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
+
+
+        exampleEmbed.addField('Toy Type', ToyUtils.formatToyName(link), true)
+        exampleEmbed
             .addField('Controllers in Queue (played)', "" + session.users.length + "(" + session.playedUsers.length + ")", true)
 
         if (!link.anonymous) {
@@ -86,7 +88,6 @@ const SoloMessageServiceModule = (function () {
     };
 
     SoloMessageService.prototype.sendPostSession = async function (session, link) {
-        let toy = Toys[link.toys[0].name]
         let timePeriod = 0;
         if (link.startTimestamp != null) {
             timePeriod = Math.round((new Date() - link.startTimestamp) / 60000)
@@ -97,8 +98,11 @@ const SoloMessageServiceModule = (function () {
             .setTitle('Session Finished')
             .setAuthor('Lovense Bot')
             .setDescription('This Lovense Session has finished.')
-            .setThumbnail(imageUrl)
-            .addField('Toy Type', toy.name + " - " + toy.emoji, true)
+            .setThumbnail(imageUrl);
+
+
+        exampleEmbed.addField('Toy Type', ToyUtils.formatToyName(link), true)
+        exampleEmbed
             .addField("Control Time", "" + timePeriod + " minutes", true)
 
         link.registrationMessage.edit({embeds: [exampleEmbed], components: []})

@@ -53,24 +53,30 @@ module.exports = {
                 } else if (speed > 20) {
                     speed = 20
                 }
-                link.maxSpeed = speed
+                link.toys.forEach(t => t.maxSpeed = speed)
             } else {
-                link.maxSpeed = -1
+                link.toys.forEach(t => t.maxSpeed = -1)
             }
             const anon = interaction.options.get('anonymous')
             if (anon != null) {
                 link.anonymous = anon.value
             }
             link.heartbeat = setInterval(async function () {
-                let response = await LovenseService.ping(link.id)
-                const resp = await response.json()
-                if (resp.status === 429 || resp.code === 400) {
-                    clearInterval(link.heartbeat)
+                try {
+                    let response = await LovenseService.ping(link.id)
+                    const resp = await response.json()
+                    if (resp.status === 429 || resp.code === 400) {
+                        await LinkService.drop(session, link)
+                    }
+                } catch (error) {
+                    Handler.logError(error)
                     await LinkService.drop(session, link)
                 }
             }, 5000)
-            await SpeedService.setSpeed(link, 1)
-            await SpeedService.setSpeed(link, 0)
+            for (const toy of link.toys) {
+                await SpeedService.setSpeed(link, toy.id, 1)
+                await SpeedService.setSpeed(link, toy.id, 0)
+            }
 
             await interaction.reply({
                 content: 'Connected! You should have received a short pulse.',
@@ -86,12 +92,10 @@ module.exports = {
                 }
                 if (session.users.length === 0) {
                     if (session.playedUsers.length !== 0) {
-                        console.log("recycling played users")
                         session.users = session.playedUsers
                         session.playedUsers = []
                     }
                 }
-                console.log('Giving Control: Top level interval')
                 return PlayService.giveControl(session, link)
             }, 5000)
         }

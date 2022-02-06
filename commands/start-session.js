@@ -30,7 +30,6 @@ module.exports = {
                 if (link != null) {
                     if (session.users.length === 0) {
                         if (session.playedUsers.length !== 0) {
-                            console.log("recycling played users")
                             session.users = session.playedUsers
                             session.playedUsers = []
                         }

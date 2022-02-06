@@ -29,18 +29,19 @@ module.exports = {
         }
         let link = await LinkService.connect(interaction, session)
         if (link != null) {
-            link.maxSpeed = -1
+            link.toys.forEach(t => t.maxSpeed = -1)
             link.heartbeat = setInterval(async function () {
                 let response = await LinkService.ping(link.id)
                 const data = await response.json()
                 if (data.status === 429 || data.code === 400) {
-                    clearInterval(link.heartbeat)
                     console.log('dropping')
                     await LinkService.drop(session, link)
                 }
             }, 5000)
-            await SpeedService.setSpeed(link, 1)
-            await SpeedService.setSpeed(link, 0)
+            for (const toy of link.toys) {
+                await SpeedService.setSpeed(link, toy.id, 1)
+                await SpeedService.setSpeed(link, toy.id, 0)
+            }
         }
         interaction.reply("Joined Session").catch(Handler.logError);
     },

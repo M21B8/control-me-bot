@@ -35,7 +35,7 @@ module.exports = {
                     } else if (speed > 20) {
                         speed = 20
                     }
-                    link.maxSpeed = speed
+                    link.toys.forEach(t => t.maxSpeed = speed)
                 }
                 interaction.reply({content: 'Max Speed has been updated', ephemeral: true}).catch(Handler.logError);
             }

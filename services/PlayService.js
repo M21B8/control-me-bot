@@ -29,12 +29,11 @@ const PlayServiceModule = (function () {
             clearTimeout(link.countdown)
         }
         if (link.currentControlMessage != null) {
-            for (const property in link.currentControlMessage) {
-                let x = link.currentControlMessage[property]
-                if (x != null) {
-                    await x.delete().catch(Handler.logError);
-                }
-            }
+            link.currentControlMessage.main.delete().catch(Handler.logError);
+            Object.values(link.currentControlMessage.toys).forEach(toyControl => {
+                toyControl.primary.delete().catch(Handler.logError);
+                toyControl.alternate.delete().catch(Handler.logError);
+            })
             link.currentControlMessage = null
         }
         if (link.currentUser != null) {
@@ -159,47 +158,48 @@ const PlayServiceModule = (function () {
         "twenty": 20,
     }
 
-    async function setSpeed(link, id, isAlt) {
+    async function setSpeed(link, toyId, id, isAlt) {
         let parsed = id
         if (isAlt) {
             parsed = id.substr(4)
         }
-        return SpeedService.setSpeed(link, idToSpeed[parsed], isAlt)
+        return SpeedService.setSpeed(link, toyId, idToSpeed[parsed], isAlt)
     }
 
-    function handleSpeeds(link, message, main) {
+    function handleSpeeds(link, message, main, toyId) {
         const messageCollector = message.createMessageComponentCollector();
         messageCollector.on('collect', async i => {
             const isAlt = i.customId.startsWith("alt-")
+            const iToy = Toys[link.toys.find(t => t.id === toyId).name]
             i.deferUpdate().catch(Handler.logError);
             if (i.customId.endsWith('stop')) {
-                await SpeedService.setSpeed(link, 0, isAlt)
+                await SpeedService.setSpeed(link, toyId, 0, isAlt)
+                message.embeds[0].title = iToy.name + " - " + (iToy.primaryName != null ? iToy.primaryName : 'Vibration') + " - " + 0
             } else if (i.customId.endsWith('max')) {
-                let speed = link.maxSpeed
+                let speed = link.toys.find(t => t.id === toyId).maxSpeed
                 if (speed === -1) {
                     speed = 20
                 }
-                await SpeedService.setSpeed(link, speed, isAlt)
+                await SpeedService.setSpeed(link, toyId, speed, isAlt)
+                message.embeds[0].title = iToy.name + " - " + (iToy.primaryName != null ? iToy.primaryName : 'Vibration') + " - " + speed
             } else {
-                await setSpeed(link, i.customId, isAlt)
+                let speed = await setSpeed(link, toyId, i.customId, isAlt)
+                message.embeds[0].title = iToy.name + " - " + (iToy.primaryName != null ? iToy.primaryName : 'Vibration') + " - " + speed
             }
-            main.embeds[0].fields[1].value = '' + link.speed
-            if (Toys[link.toys[0].name].hasAlternate) {
-                main.embeds[0].fields[2].value = '' + link.altSpeed
-            }
-            main.edit({embeds: [new MessageEmbed(main.embeds[0])]}).catch(Handler.logError);
+            message.edit({embeds: [new MessageEmbed(message.embeds[0])]}).catch(Handler.logError);
         });
     }
 
     async function endEarly(link, targetList) {
         targetList.push(link.currentUser)
         if (link.currentControlMessage !== null) {
-            for (const property in link.currentControlMessage) {
-                let x = link.currentControlMessage[property]
-                if (x != null) {
-                    await x.delete().catch(Handler.logError);
+            link.currentControlMessage.main.delete().catch(Handler.logError);
+            Object.values(link.currentControlMessage.toys).forEach(toyControl => {
+                toyControl.primary.delete().catch(Handler.logError);
+                if (toyControl.alternate != null) {
+                    toyControl.alternate.delete().catch(Handler.logError);
                 }
-            }
+            })
             link.currentControlMessage = null
         }
         link.currentUser = null
@@ -210,7 +210,7 @@ const PlayServiceModule = (function () {
         MessageService.sendControls(link, user).then((message) => {
 
             link.currentControlMessage = message
-            const main = message[0]
+            const main = message.main
 
             const mainCollector = main.createMessageComponentCollector();
             mainCollector.on('collect', async i => {
@@ -228,13 +228,16 @@ const PlayServiceModule = (function () {
                 }
             });
 
-            const primary = message[1]
-            handleSpeeds(link, primary, main)
+            link.toys.forEach(toy => {
+                const primary = message.toys[toy.id].primary
+                handleSpeeds(link, primary, main, toy.id)
 
-            const alt = message[2]
-            if (alt != null) {
-                handleSpeeds(link, alt, main)
-            }
+                const alt = message.toys[toy.id].alternate
+                if (alt != null) {
+                    handleSpeeds(link, alt, main, toy.id)
+                }
+
+            })
 
         });
     }
