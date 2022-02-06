@@ -45,7 +45,11 @@ const PlayServiceModule = (function () {
             link.currentUser = null
         }
     }
+
     PlayService.prototype.giveControl = function (session, link) {
+        if (link.terminated) {
+            return PlayService.prototype.stopControl(session, link, false)
+        }
         if (session.users.length === 0) {
             if (session.playedUsers.length === 0) {
                 if (link.currentUser != null) {
