@@ -6,6 +6,7 @@ const {SessionService} = require('../services/SessionService.js')
 const {PlayService} = require('../services/PlayService.js')
 const {SoloMessageService} = require('../services/SoloMessageService.js');
 const {SessionOwnerMessageService} = require('../services/SessionOwnerMessageService.js');
+const {Permissions} = require('discord.js')
 const Handler = require('../utils/HandlerUtils.js');
 
 module.exports = {
@@ -33,6 +34,10 @@ module.exports = {
     ,
 
     async execute(interaction) {
+        if (!interaction.channel.permissionsFor(interaction.guild.me).has(Permissions.FLAGS.VIEW_CHANNEL, Permissions.FLAGS.SEND_MESSAGES)) {
+            interaction.user.send("The Control Me Bot does not have permissions to run in that channel.")
+            return;
+        }
         let session = SessionService.createSession()
         let playtime = interaction.options.get('playtime')
         if (playtime != null) {
