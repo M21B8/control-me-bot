@@ -32,7 +32,9 @@ const PlayServiceModule = (function () {
             link.currentControlMessage.main.delete().catch(Handler.logError);
             Object.values(link.currentControlMessage.toys).forEach(toyControl => {
                 toyControl.primary.delete().catch(Handler.logError);
-                toyControl.alternate.delete().catch(Handler.logError);
+                if (toyControl.alternate != null) {
+                    toyControl.alternate.delete().catch(Handler.logError);
+                }
             })
             link.currentControlMessage = null
         }
